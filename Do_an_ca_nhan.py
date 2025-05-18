@@ -1,10 +1,11 @@
 ﻿from collections import deque
 import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
 import time
 import random 
 import networkx as nx
 from abc import ABC, abstractmethod
-from tkinter import messagebox
 import uuid
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -14,6 +15,8 @@ import gc
 from collections import deque
 import itertools
 import heapq
+import math
+import traceback
 
 
 
@@ -232,11 +235,7 @@ class HeuristicSearch(SearchAlgorithm):
 
 class GreedySearch(HeuristicSearch):
     def solve(self):
-        """
-        Greedy Best-First Search implementation.
-        Uses only the heuristic (Manhattan distance) to guide the search.
-        Does not consider path cost.
-        """
+       
         initial = self.initial_state
         target = self.target_state
         
@@ -268,7 +267,7 @@ class GreedySearch(HeuristicSearch):
 
 class AStarSearch(HeuristicSearch):
     def solve(self):
-        """A* search algorithm"""
+        """A* """
         initial = self.initial_state
         target = self.target_state
         
@@ -311,9 +310,7 @@ class AStarSearch(HeuristicSearch):
 class IDAStarSearch(HeuristicSearch):
     def solve(self):
         """
-        IDA* (Iterative Deepening A*) search algorithm.
-        Uses iterative deepening with A* heuristic to find optimal solution
-        with lower memory usage than standard A*.
+        IDA* (Iterative Deepening A*) search 
         """
         initial = self.initial_state
         target = self.target_state
@@ -339,21 +336,7 @@ class IDAStarSearch(HeuristicSearch):
             bound = t
     
     def _search(self, path, g, bound, target, visited_states):
-        """
-        Recursive helper function for IDA*.
         
-        Args:
-            path: Current path being explored
-            g: Cost so far
-            bound: Current cost bound
-            target: Target state
-            visited_states: Dictionary to track visited states and their parents
-        
-        Returns:
-            - float('inf') if no solution found within bound
-            - solution path list if solution found
-            - new bound if search needs to continue with higher bound
-        """
         current = path[-1]
         f = g + self._calculate_manhattan_distance(current, target)
         if f > bound: #f lon hon bound thi tang boun
@@ -385,14 +368,13 @@ class IDAStarSearch(HeuristicSearch):
         return min_bound, None
     
     def _print_state_grid(self, state):
-        """Print the puzzle state in a grid format for console output"""
         for i in range(0, 9, 3):
             print(" ".join(state[i:i+3]).replace("_", " "))
 
 class HillClimbingSearch(HeuristicSearch):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.max_iterations = 10000  # Giới hạn số lần lặp
+        self.max_iterations = 10000  
         self.visited_states = {}  
         
     def _calculate_misplaced_tiles(self, state, target):
@@ -408,7 +390,6 @@ class HillClimbingSearch(HeuristicSearch):
         manhattan = self._calculate_manhattan_distance(state, target)
         conflicts = 0
         
-        # Kiểm tra xung đột trong hàng
         for row in range(3):
             tiles_in_row = []
             for col in range(3):
@@ -417,18 +398,16 @@ class HillClimbingSearch(HeuristicSearch):
                     tile = state[idx]
                     target_idx = target.index(tile)
                     target_row = target_idx // 3
-                    if target_row == row:  # Nếu ô thuộc đúng hàng trong trạng thái đích
-                        tiles_in_row.append((tile, target_idx % 3))  # (giá trị, cột đích)
+                    if target_row == row:  
+                        tiles_in_row.append((tile, target_idx % 3))  
             
-            # Kiểm tra xung đột giữa các ô trong cùng hàng
             for i in range(len(tiles_in_row)):
                 for j in range(i+1, len(tiles_in_row)):
                     tile_i, col_i = tiles_in_row[i]
                     tile_j, col_j = tiles_in_row[j]
                     if col_i > col_j: 
-                        conflicts += 2  # Mỗi xung đột tính 2 bước di chuyển
+                        conflicts += 2  
         
-        # Kiểm tra xung đột trong cột
         for col in range(3):
             tiles_in_col = []
             for row in range(3):
@@ -437,15 +416,15 @@ class HillClimbingSearch(HeuristicSearch):
                     tile = state[idx]
                     target_idx = target.index(tile)
                     target_col = target_idx % 3
-                    if target_col == col:  # Nếu ô thuộc đúng cột trong trạng thái đích
-                        tiles_in_col.append((tile, target_idx // 3))  # (giá trị, hàng đích)
+                    if target_col == col:  
+                        tiles_in_col.append((tile, target_idx // 3))  
             
             for i in range(len(tiles_in_col)):
                 for j in range(i+1, len(tiles_in_col)):
                     tile_i, row_i = tiles_in_col[i]
                     tile_j, row_j = tiles_in_col[j]
                     if row_i > row_j:  
-                        conflicts += 2  # Mỗi xung đột tính 2 bước di chuyển
+                        conflicts += 2  
         
         return manhattan + conflicts
     
@@ -458,10 +437,8 @@ class HillClimbingSearch(HeuristicSearch):
             if state[pos] != '_' and state[pos] != target[pos]:
                 tile = state[pos]
                 target_idx = target.index(tile)
-                # Tính khoảng cách Manhattan
                 corner_cost += abs(pos // 3 - target_idx // 3) + abs(pos % 3 - target_idx % 3)
         
-        # Tính chi phí cho các ô còn lại
         other_cost = 0
         for pos in [1, 3, 4, 5, 7]:  
             if state[pos] != '_' and state[pos] != target[pos]:
@@ -478,7 +455,6 @@ class HillClimbingSearch(HeuristicSearch):
         h3 = self._calculate_linear_conflict(state, target)
         h4 = self._calculate_pattern_database(state, target)
         
-        # Chọn heuristic mạnh nhất
         return max(h1, h2, h3, h4)
     
     def _is_solvable(self, state, target):
@@ -486,7 +462,6 @@ class HillClimbingSearch(HeuristicSearch):
         state_list = [0 if x == '_' else int(x) for x in state]
         target_list = [0 if x == '_' else int(x) for x in target]
         
-        # Tính số nghịch thế trong state
         state_inversions = 0
         for i in range(len(state_list)):
             if state_list[i] == 0:  
@@ -495,7 +470,6 @@ class HillClimbingSearch(HeuristicSearch):
                 if state_list[j] != 0 and state_list[i] > state_list[j]:
                     state_inversions += 1
         
-        # Tính số nghịch thế trong target
         target_inversions = 0
         for i in range(len(target_list)):
             if target_list[i] == 0:  
@@ -553,7 +527,7 @@ class SimpleHC(HillClimbingSearch):
             
             # BƯỚC 5: Lặp lại BƯỚC 2-BƯỚC 4 cho đến khi không còn cải thiện
         
-        # BƯỚC 6: Trả về trạng thái hiện tại và giá trị hàm mục tiêu của nó
+        # BƯỚC 6: Trả về trạng thái hiện tại và giá trị hàm mục tiêu
         if current == self.target_state:
             print(f"Tìm thấy giải pháp sau {iterations} bước!")
             return self._reconstruct_path(current, parent)
@@ -598,7 +572,6 @@ class SteepestHC(HillClimbingSearch):
                 next_h = self._calculate_combined_heuristic(next_state, self.target_state)
                 neighbors_h.append((next_h, next_state))
             
-            # Sắp xếp theo giá trị heuristic tăng dần 
             neighbors_h.sort()
             
             # BƯỚC 4: Kiểm tra nếu trạng thái hiện tại tốt hơn tất cả các lân cận
@@ -614,9 +587,9 @@ class SteepestHC(HillClimbingSearch):
             if current == self.target_state:
                 break
             
-            # BƯỚC 5: Lặp lại BƯỚC 2-BƯỚC 4 (thông qua vòng lặp while)
+            # BƯỚC 5: Lặp lại BƯỚC 2-BƯỚC 4 
         
-        # BƯỚC 6: Trả về trạng thái hiện tại và giá trị hàm mục tiêu của nó
+        # BƯỚC 6: Trả về trạng thái hiện tại và giá trị hàm mục tiêu 
         if current == self.target_state:
             print(f"Tìm thấy giải pháp sau {iterations} bước!")
         else:
@@ -632,8 +605,8 @@ class BeamSteepestHC(SteepestHC):
         self.max_iterations = 15000   # Tăng số lần lặp tối đa
         self.restart_threshold = 500  # Số bước không cải thiện trước khi khởi động lại
         self.dynamic_beam_adjustment = True  
-        self.min_beam_width = 5       # Giới hạn dưới của beam width
-        self.max_beam_width = 30      # Giới hạn trên của beam width
+        self.min_beam_width = 5       # Giới hạn dưới 
+        self.max_beam_width = 30      # Giới hạn trên 
         
     def solve(self):
         """Beam Search kết hợp với Steepest Hill Climbing"""
@@ -645,7 +618,6 @@ class BeamSteepestHC(SteepestHC):
             print("Bài toán không thể giải được!")
             return None
         
-        # Khởi tạo tham số
         best_h_overall = float('inf')
         best_state_overall = None
         iterations = 0
@@ -655,8 +627,8 @@ class BeamSteepestHC(SteepestHC):
         global_parent = {}
         
         current_beam = [(self._calculate_combined_heuristic(self.initial_state, self.target_state), 
-                        0, self.initial_state)]  # (heuristic, tie_breaker, state)
-        visited_states = {self.initial_state: 0}  # state -> cost (heuristic)
+                        0, self.initial_state)]  
+        visited_states = {self.initial_state: 0}  
         parent = {self.initial_state: None}
         
         stagnation_counter = 0
@@ -861,7 +833,6 @@ class StochasticHC(HillClimbingSearch):
             
             current_h = self._calculate_combined_heuristic(current, self.target_state)
             
-            # Lọc ra các hàng xóm có heuristic tốt hơn hiện tại
             better_neighbors = []
             
             for next_state in next_states:
@@ -891,8 +862,8 @@ class SimulatedAnnealingHC(HillClimbingSearch):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
         self.initial_temperature = 1000.0
-        self.cooling_rate = 0.95
-        self.min_temperature = 0.01
+        self.cooling_rate = 0.95 #lam mat
+        self.min_temperature = 0.01 #nguong dung
     
     def solve(self):
         """Thuật toán Mô phỏng luyện kim (Simulated Annealing)"""
@@ -922,7 +893,7 @@ class SimulatedAnnealingHC(HillClimbingSearch):
             if iterations % 1000 == 0:
                 print(f"Đã thực hiện {iterations} bước, nhiệt độ: {temperature:.2f}")
             
-            # a. Sinh hàng xóm - Tạo một trạng thái hàng xóm ngẫu nhiên
+            # a. Tạo một trạng thái hàng xóm ngẫu nhiên
             current_state = PuzzleState(current)
             next_states = current_state.get_next_states()
             
@@ -970,7 +941,7 @@ class SimulatedAnnealingHC(HillClimbingSearch):
             # 3. Làm nguội - Cập nhật nhiệt độ
             temperature = temperature * self.cooling_rate
         
-        # 4. Kết thúc - Trả về trạng thái hiện tại hoặc trạng thái tốt nhất đã tìm thấy
+        # 4. Kết thúc - Trả về trạng thái trạng thái tốt nhất đã tìm thấy
         print(f"Kết thúc tìm kiếm sau {iterations} bước, nhiệt độ cuối: {temperature:.2f}")
         
         if best_state == self.target_state:
@@ -995,7 +966,7 @@ class GeneticAlgorithm(SearchAlgorithm):
         self.max_generations = max_generations        # Số thế hệ tối đa
         self.mutation_rate = mutation_rate            # Tỷ lệ đột biến
         self.elite_size = elite_size                  # Số cá thể tốt nhấtnhất
-        self.crossover_rate = crossover_rate          # Tỷ lệ lai ghép
+        self.crossover_rate = crossover_rate          # Tỷ lệ lai 
         self.best_solution = None                     
         
     def _calculate_fitness(self, state):
@@ -1044,13 +1015,11 @@ class GeneticAlgorithm(SearchAlgorithm):
         
         selection_probs = [f / total_fitness for f in fitness_scores]
         
-        # Chọn elite_size cá thể tốt nhất 
         elite_indices = sorted(range(len(fitness_scores)), 
                              key=lambda i: fitness_scores[i], 
                              reverse=True)[:self.elite_size]
         elite = [population[i] for i in elite_indices]
         
-        # Chọn phần còn lại bằng phương pháp roulette wheel 
         selected = elite.copy()
         while len(selected) < self.population_size:
             pick = random.random()
@@ -1119,7 +1088,6 @@ class GeneticAlgorithm(SearchAlgorithm):
         state_list = [0 if x == '_' else int(x) for x in state]
         target_list = [0 if x == '_' else int(x) for x in self.target_state]
         
-        # Tính số nghịch thế trong state
         state_inversions = 0
         for i in range(len(state_list)):
             if state_list[i] == 0:  
@@ -1128,7 +1096,6 @@ class GeneticAlgorithm(SearchAlgorithm):
                 if state_list[j] != 0 and state_list[i] > state_list[j]:
                     state_inversions += 1
         
-        # Tính số nghịch thế trong target
         target_inversions = 0
         for i in range(len(target_list)):
             if target_list[i] == 0: 
@@ -1173,7 +1140,6 @@ class GeneticAlgorithm(SearchAlgorithm):
             best_fitness = fitness_scores[best_fitness_idx]
             best_state = population[best_fitness_idx]
             
-            # Cập nhật giải pháp tốt nhất tổng thể
             if best_fitness > best_fitness_overall:
                 best_fitness_overall = best_fitness
                 best_state_overall = best_state
@@ -1201,11 +1167,10 @@ class GeneticAlgorithm(SearchAlgorithm):
             for idx in elite_indices:
                 new_population.append(population[idx])
             
-            # Lai ghép và đột biến để tạo phần còn lại của quần thể
             while len(new_population) < self.population_size:
                 parent1, parent2 = random.sample(selected, 2)
                 
-                # Lai ghép để tạo con
+                # Lai ghép 
                 child = self._crossover(parent1, parent2)
                 
                 # Đột biến
@@ -1245,38 +1210,107 @@ class GeneticAlgorithm(SearchAlgorithm):
 class BeliefStateSearch(SearchAlgorithm):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        # Khởi tạo belief state ban đầu - có thể là một tập hợp các trạng thái khả dĩ
-        self.initial_belief = self._create_initial_belief()
+        self.belief_states_per_batch = 6
+        self.direction_names = ["UP", "DOWN", "LEFT", "RIGHT"]
+        self.directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        
+        self.initial_belief = self._create_predefined_states()
+        self.solution_path = None
+        self.solution_actions = None
+        self.belief_states_history = []
+        self.action_history = []
 
-    def _create_initial_belief(self):
-        """Tạo belief state ban đầu dựa trên thông tin không chắc chắn"""
-        # Ví dụ: giả sử chúng ta không chắc chắn vị trí của ô trống
+    def _create_predefined_states(self):
+        """
+        Tạo sẵn 6 trạng thái niềm tin ban đầu có thể giải được
+        Các trạng thái này được thiết kế để có thể giải được và không trùng với trạng thái đích
+        """
         belief_states = set()
         
-        belief_states.add(self.initial_state)
         
-        # Tạo các biến thể khả dĩ 
-        state_list = list(self.initial_state)
-        blank_idx = state_list.index('_')
+        predefined_states = [
+            "1234_5678",  
+            "1234567_8",  
+            "12345_786",  
+            "123_45786",  
+            "1_3425786",  
+            "142_35786"   
+        ]
         
-        if blank_idx != 0:  # Nếu ô trống không ở góc trên trái
-            variant = state_list.copy()
-            # Đổi chỗ ô trống với ô ở góc trên trái
-            variant[blank_idx], variant[0] = variant[0], variant[blank_idx]
-            belief_states.add(''.join(variant))
+        for state in predefined_states:
+            if self._is_solvable(state, self.target_state) and state != self.target_state:
+                belief_states.add(state)
+        
+        if len(belief_states) < self.belief_states_per_batch:
+            if self.initial_state not in belief_states and self.initial_state != self.target_state:
+                belief_states.add(self.initial_state)
             
-        if blank_idx != 2:  
-            variant = state_list.copy()
-            variant[blank_idx], variant[2] = variant[2], variant[blank_idx]
-            belief_states.add(''.join(variant))
-            
+            self._add_random_states(belief_states)
+        
         return belief_states
+        
+    def _add_random_states(self, belief_states):
+        """Thêm các trạng thái ngẫu nhiên vào tập niềm tin nếu chưa đủ 6 trạng thái"""
+        import random
+        attempted_states = 0
+        max_attempts = 50
+        
+        while len(belief_states) < self.belief_states_per_batch and attempted_states < max_attempts:
+            state_list = list(self.initial_state)
+            num_moves = random.randint(5, 20) 
+            
+            for _ in range(num_moves):
+                blank_idx = state_list.index('_')
+                blank_row, blank_col = divmod(blank_idx, 3)
+                possible_moves = []
+                
+                for dr, dc in self.directions:
+                    new_row, new_col = blank_row + dr, blank_col + dc
+                    if 0 <= new_row < 3 and 0 <= new_col < 3:
+                        possible_moves.append((new_row, new_col))
+                
+                if possible_moves:
+                    new_row, new_col = random.choice(possible_moves)
+                    new_idx = new_row * 3 + new_col
+                    state_list[blank_idx], state_list[new_idx] = state_list[new_idx], state_list[blank_idx]
+            
+            new_state = ''.join(state_list)
+            if (self._is_solvable(new_state, self.target_state) and 
+                new_state not in belief_states and 
+                new_state != self.target_state):
+                belief_states.add(new_state)
+            
+            attempted_states += 1
+
+    def _is_solvable(self, state, target):
+        """Kiểm tra xem bài toán có thể giải được không"""
+        state_list = [0 if x == '_' else int(x) for x in state]
+        target_list = [0 if x == '_' else int(x) for x in target]
+        
+        state_inversions = 0
+        for i in range(len(state_list)):
+            if state_list[i] == 0:
+                continue
+            for j in range(i+1, len(state_list)):
+                if state_list[j] != 0 and state_list[i] > state_list[j]:
+                    state_inversions += 1
+        
+        target_inversions = 0
+        for i in range(len(target_list)):
+            if target_list[i] == 0:
+                continue
+            for j in range(i+1, len(target_list)):
+                if target_list[j] != 0 and target_list[i] > target_list[j]:
+                    target_inversions += 1
+        
+        return state_inversions % 2 == target_inversions % 2
 
     def _apply_action(self, action, belief_state):
-        """Áp dụng một hành động lên tất cả các trạng thái trong belief state"""
+        """
+        Áp dụng một hành động (UP, DOWN, LEFT, RIGHT) lên tất cả các trạng thái trong belief state
+        """
         new_belief = set()
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  
-        dr, dc = directions[action]
+        dr, dc = self.directions[action]
         
         for state in belief_state:
             state_obj = PuzzleState(state)
@@ -1290,63 +1324,161 @@ class BeliefStateSearch(SearchAlgorithm):
                 new_state_list = list(state)
                 new_state_list[blank_idx], new_state_list[new_idx] = new_state_list[new_idx], new_state_list[blank_idx]
                 new_belief.add(''.join(new_state_list))
+            else:
+                new_belief.add(state)
         
-        return new_belief if new_belief else None
+        return new_belief
+
+    def _get_manhattan_distance(self, state):
+        """Tính khoảng cách Manhattan từ một trạng thái đến trạng thái đích"""
+        distance = 0
+        target = self.target_state
+        
+        for i in range(len(state)):
+            if state[i] != '_' and state[i] != target[i]:
+                current_row, current_col = divmod(i, 3)
+                target_idx = target.index(state[i])
+                target_row, target_col = divmod(target_idx, 3)
+                distance += abs(current_row - target_row) + abs(current_col - target_col)
+        
+        return distance
+
+    def _calculate_belief_state_heuristic(self, belief_state):
+        """Tính hàm heuristic cho một belief state bằng trung bình khoảng cách Manhattan"""
+        if not belief_state:
+            return float('inf')
+        
+        total_distance = sum(self._get_manhattan_distance(state) for state in belief_state)
+        return total_distance / len(belief_state)
 
     def _is_goal_belief(self, belief_state):
-        """Kiểm tra xem tất cả các trạng thái trong belief state có phải là trạng thái đích không"""
-        return all(state == self.target_state for state in belief_state)
+        """Kiểm tra xem có bất kỳ trạng thái nào trong belief state là trạng thái đích không"""
+        return any(state == self.target_state for state in belief_state)
 
     def solve(self):
-        """Tìm dãy hành động để đưa tất cả trạng thái trong belief state về trạng thái đích"""
-        queue = deque([(self.initial_belief, [])])  
-        visited = {frozenset(self.initial_belief)}
+        """Tìm dãy hành động để giải quyết bài toán cho 6 niềm tin ban đầu"""
+        self.belief_states_history = []
+        self.action_history = []
+        self.individual_paths = {}
+        self.individual_actions = {}
         
-        while queue:
-            current_belief, actions = queue.popleft()
-            
-            if self._is_goal_belief(current_belief):
-                return self._reconstruct_path(actions)
-            
-            for action in range(4): 
-                next_belief = self._apply_action(action, current_belief)
-                
-                if next_belief is not None:
-                    belief_key = frozenset(next_belief)
-                    if belief_key not in visited:
-                        visited.add(belief_key)
-                        queue.append((next_belief, actions + [action]))
+        for state in self.initial_belief:
+            path, actions = self._search_individual_state(state)
+            if path:
+                self.individual_paths[state] = path
+                self.individual_actions[state] = actions
         
-        return None  
+        if self.individual_paths:
+            shortest_state = min(self.individual_paths.keys(), 
+                                key=lambda s: len(self.individual_paths[s]))
+            self.solution_path = self.individual_paths[shortest_state]
+            self.solution_actions = self.individual_actions[shortest_state]
+            return self.solution_path
+        
+        return None
 
-    def _reconstruct_path(self, actions):
+    def _search_individual_state(self, start_state):
+        """
+        Tìm kiếm đường đi cho một trạng thái cụ thể
+        Sử dụng A* search với heuristic là khoảng cách Manhattan
+        """
+        from queue import PriorityQueue
+        
+        frontier = PriorityQueue()
+        frontier.put((0, 0, start_state, []))  
+        
+        visited = {start_state}
+        counter = 1  
+        state_history = [start_state]
+        action_history = []
+        
+        while not frontier.empty():
+            _, _, current_state, actions = frontier.get()
+            
+            if current_state == self.target_state:
+                path = self._reconstruct_path(start_state, actions)
+                return path, actions
+            
+            for action in range(len(self.directions)):
+                next_state = self._apply_single_action(current_state, action)
+                
+                if next_state is not None and next_state not in visited:
+                    visited.add(next_state)
+                    
+                    priority = len(actions) + 1 + self._get_manhattan_distance(next_state)
+                    
+                    state_history.append(next_state)
+                    action_history.append(self.direction_names[action])
+                    
+                    frontier.put((priority, counter, next_state, actions + [action]))
+                    counter += 1
+        
+        self.belief_states_history.append(state_history)
+        self.action_history.append(action_history)
+        
+        return None, None
+
+    def _search_belief_state(self):
+        """
+        Tìm kiếm chuỗi hành động để giải quyết bài toán cho 6 niềm tin ban đầu
+        Phương thức này được giữ lại để tương thích ngược với mã nguồn cũ
+        """
+        for state in self.initial_belief:
+            path, actions = self._search_individual_state(state)
+            if path:
+                return (actions, path)
+        
+        return None
+
+    def _apply_single_action(self, state, action):
+        """Áp dụng một hành động lên một trạng thái duy nhất"""
+        dr, dc = self.directions[action]
+        
+        state_obj = PuzzleState(state)
+        blank_row, blank_col = state_obj.get_blank_position()
+        new_row, new_col = blank_row + dr, blank_col + dc
+        
+        if 0 <= new_row < 3 and 0 <= new_col < 3:
+            blank_idx = blank_row * 3 + blank_col
+            new_idx = new_row * 3 + new_col
+            
+            new_state_list = list(state)
+            new_state_list[blank_idx], new_state_list[new_idx] = new_state_list[new_idx], new_state_list[blank_idx]
+            return ''.join(new_state_list)
+        
+        return None
+
+    def _reconstruct_path(self, state, actions):
         """Tái tạo đường đi từ chuỗi hành động"""
-        path = [self.initial_state]
-        current = self.initial_state
+        path = [state]
+        current = state
         
         for action in actions:
-            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  
-            dr, dc = directions[action]
-            
-            state_obj = PuzzleState(current)
-            blank_row, blank_col = state_obj.get_blank_position()
-            new_row, new_col = blank_row + dr, blank_col + dc
-            
-            if 0 <= new_row < 3 and 0 <= new_col < 3:
-                blank_idx = blank_row * 3 + blank_col
-                new_idx = new_row * 3 + new_col
-                
-                new_state_list = list(current)
-                new_state_list[blank_idx], new_state_list[new_idx] = new_state_list[new_idx], new_state_list[blank_idx]
-                current = ''.join(new_state_list)
+            next_state = self._apply_single_action(current, action)
+            if next_state is not None:
+                path.append(next_state)
+                current = next_state
+            else:
                 path.append(current)
         
         return path
+        
+    def get_belief_states(self):
+        """Trả về tập hợp các niềm tin hiện tại"""
+        return self.initial_belief
+        
+    def get_belief_states_history(self):
+        """Trả về lịch sử các tập niềm tin đã duyệt qua"""
+        return self.belief_states_history
+        
+    def get_action_history(self):
+        """Trả về lịch sử các hành động đã thực hiện"""
+        return self.action_history
 
 class ANDORSearch(SearchAlgorithm):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.max_depth = 31  # Giới hạn độ sâu để tránh vòng lặp vô hạn
+        self.max_depth = 31 
 
     def _get_nondeterministic_next_states(self, state, action_index):
         """Mô phỏng tính phi tất định: một hành động có thể dẫn đến nhiều trạng thái"""
@@ -1383,7 +1515,6 @@ class ANDORSearch(SearchAlgorithm):
 
     def solve(self):
         """Tìm kiếm cây AND-OR để tìm cây con giải pháp"""
-        # Stack chứa: (state, depth, action_sequence, parent_map)
         stack = [(self.initial_state, 0, [], {self.initial_state: None})]
         visited = set()  
 
@@ -1424,85 +1555,141 @@ class ANDORSearch(SearchAlgorithm):
 class PartiallyObservableSearch(SearchAlgorithm):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.max_iterations = 1000  # Số bước tìm kiếm tối đa
-        self.max_belief_size = 1000  # Kích thước belief state tối đa
+        self.max_iterations = 1000  
+        self.max_belief_size = 1000  
         self.observation_noise = 0.1  # Xác suất quan sát không chính xác
-        self.hidden_tiles = 2  
-        self.belief_sizes = []  
+        self.visible_area_size = 1  # Kích thước vùng quan sát (1 = ô trống và 4 ô lân cận)
+        
+        
+        self.belief_states_history = [] 
+        self.actions_history = [] 
+        self.observations_history = []  
+        self.initial_belief = set()  
     
     def _is_solvable(self, state, target):
-        """Kiểm tra xem bài toán có thể giải được không"""
+        """Kiểm tra xem bài toán có thể giải được không dựa trên tính chẵn lẻ của số nghịch thế"""
         state_list = [0 if x == '_' else int(x) for x in state]
         target_list = [0 if x == '_' else int(x) for x in target]
         
         state_inversions = 0
         for i in range(len(state_list)):
-            if state_list[i] == 0:  
+            if state_list[i] == 0:
                 continue
             for j in range(i+1, len(state_list)):
                 if state_list[j] != 0 and state_list[i] > state_list[j]:
                     state_inversions += 1
         
-        # Tính số nghịch thế 
         target_inversions = 0
         for i in range(len(target_list)):
-            if target_list[i] == 0: 
+            if target_list[i] == 0:
                 continue
             for j in range(i+1, len(target_list)):
                 if target_list[j] != 0 and target_list[i] > target_list[j]:
                     target_inversions += 1
         
-        # Kiểm tra tính chẵn lẻ của số nghịch thế
         return (state_inversions % 2) == (target_inversions % 2)
     
-    def _create_initial_belief(self):
-        """Tạo belief state ban đầu dựa trên giả định không biết vị trí chính xác của một số ô"""
+    def _get_visible_tiles(self, state, blank_pos):
+        """Trả về các vị trí của các ô có thể nhìn thấy từ vị trí ô trống"""
+        row, col = divmod(blank_pos, 3)
+        visible_positions = {blank_pos}  
+        
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  
+        
+        for dr, dc in directions:
+            new_row, new_col = row + dr, col + dc
+            if 0 <= new_row < 3 and 0 <= new_col < 3:
+                visible_positions.add(new_row * 3 + new_col)
+        
+        return visible_positions
+    
+    def _get_partial_observation(self, state):
+        """Trả về một quan sát một phần của trạng thái"""
         import random
         
-        belief_states = set()
-        belief_states.add(self.initial_state)
+        blank_pos = state.index('_')
+        visible_positions = self._get_visible_tiles(state, blank_pos)
         
-        state_list = list(self.initial_state)
-        blank_idx = state_list.index('_')
-        
-        tiles = [i for i in range(9) if i != blank_idx]
-        hidden_tiles = random.sample(tiles, min(self.hidden_tiles, len(tiles)))
-        
-        for perm in itertools.permutations(hidden_tiles):
-            new_state = state_list.copy()
+        masked_state = ['?' for _ in range(9)]
+        for pos in visible_positions:
+            masked_state[pos] = state[pos]
             
-            for i, j in zip(hidden_tiles, perm):
-                new_state[i], new_state[j] = new_state[j], new_state[i]
+        if random.random() < self.observation_noise:
+            visible_non_blank = [pos for pos in visible_positions if pos != blank_pos]
+            if visible_non_blank:
+                noise_pos = random.choice(visible_non_blank)
+                other_tiles = [state[i] for i in range(9) if i not in visible_positions and state[i] != '_']
+                if other_tiles:
+                    masked_state[noise_pos] = random.choice(other_tiles)
+        
+        return ''.join(masked_state)
+    
+    def _create_initial_belief(self):
+        """Tạo belief state ban đầu dựa trên quan sát ban đầu"""
+        import random
+        import itertools
+        
+        initial_observation = self._get_partial_observation(self.initial_state)
+        self.observations_history.append(initial_observation)
+        
+        print(f"Quan sát ban đầu: {initial_observation}")
+        
+        known_positions = [i for i, c in enumerate(initial_observation) if c != '?']
+        unknown_positions = [i for i, c in enumerate(initial_observation) if c == '?']
+        known_tiles = [initial_observation[i] for i in known_positions]
+        
+        missing_tiles = []
+        for i in range(1, 9):
+            tile = str(i)
+            if tile not in known_tiles:
+                missing_tiles.append(tile)
+        
+        if '_' not in known_tiles:
+            missing_tiles.append('_')
+        
+        assert len(missing_tiles) == len(unknown_positions), "Số ô chưa biết không khớp với số vị trí chưa biết"
+        
+        belief_states = set()
+        
+        max_permutations = min(10000, math.factorial(len(missing_tiles)))
+        
+        for perm in itertools.permutations(missing_tiles):
+            if len(belief_states) >= self.max_belief_size:
+                break
+                
+            new_state = list(initial_observation)
+            for i, pos in enumerate(unknown_positions):
+                new_state[pos] = perm[i]
             
             new_state_str = ''.join(new_state)
+            
             if self._is_solvable(new_state_str, self.target_state):
                 belief_states.add(new_state_str)
             
-            if len(belief_states) >= self.max_belief_size:
+            if len(belief_states) >= max_permutations:
                 break
         
+        if not belief_states:
+            print("Không tìm thấy belief state hợp lệ, thử với nhiều trạng thái hơn...")
+            for perm in itertools.permutations(missing_tiles):
+                new_state = list(initial_observation)
+                for i, pos in enumerate(unknown_positions):
+                    new_state[pos] = perm[i]
+                
+                new_state_str = ''.join(new_state)
+                belief_states.add(new_state_str)
+                
+                if len(belief_states) >= self.max_belief_size:
+                    break
+        
         print(f"Khởi tạo belief state với {len(belief_states)} trạng thái khả dĩ")
+        self.initial_belief = belief_states
         return belief_states
     
-    def _get_observation(self, action, next_state, current_state):
-        """Mô phỏng quan sát sau khi thực hiện hành động
-           Trả về thông tin về ô đã được đổi chỗ với ô trống"""
+    def _update_belief_state(self, belief_state, action, observation):
+        """Cập nhật belief state dựa trên hành động và quan sát mới"""
         import random
         
-        blank_idx_current = current_state.index('_')
-        blank_idx_next = next_state.index('_')
-        
-        moved_tile = next_state[blank_idx_current]
-        
-        if random.random() < self.observation_noise:
-            other_tiles = [next_state[i] for i in range(9) if i != blank_idx_next and i != blank_idx_current]
-            if other_tiles:
-                moved_tile = random.choice(other_tiles)
-        
-        return moved_tile
-    
-    def _update_belief_state(self, belief_state, action, observation):
-        """Cập nhật belief state dựa trên hành động và quan sát"""
         new_belief = set()
         
         for state in belief_state:
@@ -1510,9 +1697,15 @@ class PartiallyObservableSearch(SearchAlgorithm):
             next_states = state_obj.get_next_states()
             
             for next_state in next_states:
-                expected_observation = self._get_observation(action, next_state, state)
+                simulated_observation = self._get_partial_observation(next_state)
                 
-                if expected_observation == observation:
+                matches = True
+                for i in range(9):
+                    if observation[i] != '?' and simulated_observation[i] != '?' and observation[i] != simulated_observation[i]:
+                        matches = False
+                        break
+                
+                if matches:
                     new_belief.add(next_state)
         
         if len(new_belief) > self.max_belief_size:
@@ -1542,10 +1735,16 @@ class PartiallyObservableSearch(SearchAlgorithm):
         """Kiểm tra xem belief state có chứa trạng thái đích không"""
         return self.target_state in belief_state
     
+    def _print_state_grid(self, state):
+        """In ra trạng thái dạng lưới 3x3"""
+        for i in range(3):
+            print(' '.join(state[i*3:(i+1)*3]))
+    
     def solve(self):
         """Tìm đường đi từ belief state ban đầu đến belief state chứa trạng thái đích"""
         import random
         import time
+        import heapq
         
         if not self._is_solvable(self.initial_state, self.target_state):
             print("Bài toán không thể giải được!")
@@ -1553,12 +1752,16 @@ class PartiallyObservableSearch(SearchAlgorithm):
         
         start_time = time.time()
         
-        initial_belief = self._create_initial_belief()
-        self.belief_sizes.append(len(initial_belief))
+        if not self.initial_belief:
+            initial_belief = self._create_initial_belief()
+        else:
+            initial_belief = self.initial_belief
         
-        import heapq
+        self.belief_states_history = [initial_belief]
+        
         queue = [(self._calculate_belief_heuristic(initial_belief), id(initial_belief), 
                  initial_belief, [self.initial_state], {self.initial_state: None})]
+        
         visited_beliefs = set([frozenset(initial_belief)])
         
         iterations = 0
@@ -1574,7 +1777,7 @@ class PartiallyObservableSearch(SearchAlgorithm):
                         parent[state] = path[-1]
                         path.append(state)
                         print(f"Tìm thấy giải pháp sau {iterations} bước, {time.time() - start_time:.3f}s")
-                        print(f"Kích thước belief state qua các bước: {self.belief_sizes}")
+                        print(f"Kích thước belief states: {[len(bs) for bs in self.belief_states_history]}")
                         return path
             
             current_state = path[-1]
@@ -1596,12 +1799,13 @@ class PartiallyObservableSearch(SearchAlgorithm):
             next_states_with_heuristic.sort()
             
             for _, next_state in next_states_with_heuristic:
-                observation = self._get_observation(None, next_state, current_state)
+                action = "move" 
+                observation = self._get_partial_observation(next_state)
                 
-                new_belief = self._update_belief_state(current_belief, None, observation)
+                new_belief = self._update_belief_state(current_belief, action, observation)
                 
                 if not new_belief:
-                    continue  
+                    continue
                 
                 belief_key = frozenset(new_belief)
                 
@@ -1616,28 +1820,40 @@ class PartiallyObservableSearch(SearchAlgorithm):
                     
                     heapq.heappush(queue, (belief_h, id(new_belief), new_belief, new_path, new_parent))
                     
-                    self.belief_sizes.append(len(new_belief))
+                    self.belief_states_history.append(new_belief)
+                    self.actions_history.append(action)
+                    self.observations_history.append(observation)
         
         print(f"Không tìm thấy giải pháp sau {iterations} bước, {time.time() - start_time:.3f}s")
-        return None 
+        return None
+    
+    def get_belief_states_history(self):
+        """Trả về lịch sử các belief states"""
+        return self.belief_states_history
+    
+    def get_actions_history(self):
+        """Trả về lịch sử các hành động"""
+        return self.actions_history
+    
+    def get_observations_history(self):
+        """Trả về lịch sử các quan sát"""
+        return self.observations_history
 
 class BacktrackingSearch(SearchAlgorithm):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.max_depth = 31  # Giới hạn độ sâu 
+        self.max_depth = 31  
         self.visited = set()  
         self.path = []  
         self.best_path = None  
         self.best_path_length = float('inf')  
-        self.num_backtracks = 0  # Số lần quay lui
+        self.num_backtracks = 0  
     
     def _is_solvable(self, state, target):
         """Kiểm tra xem bài toán có thể giải được không"""
-        # Chuyển '_' thành '0' 
         state_list = [0 if x == '_' else int(x) for x in state]
         target_list = [0 if x == '_' else int(x) for x in target]
         
-        # Tính số nghịch thế 
         state_inversions = 0
         for i in range(len(state_list)):
             if state_list[i] == 0: 
@@ -1646,7 +1862,6 @@ class BacktrackingSearch(SearchAlgorithm):
                 if state_list[j] != 0 and state_list[i] > state_list[j]:
                     state_inversions += 1
         
-        # Tính số nghịch thế 
         target_inversions = 0
         for i in range(len(target_list)):
             if target_list[i] == 0: 
@@ -1707,7 +1922,6 @@ class BacktrackingSearch(SearchAlgorithm):
     
     def solve(self):
         """Giải bài toán sử dụng backtracking"""
-        # Kiểm tra tính khả thi
         if not self._is_solvable(self.initial_state, self.target_state):
             print("Bài toán không thể giải được!")
             return None
@@ -1727,12 +1941,11 @@ class BacktrackingSearch(SearchAlgorithm):
 class ForwardCheckingSearch(BacktrackingSearch):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.num_forward_checks = 0  # Số lần kiểm tra forward
-        self.max_lookahead = 3  # Số bước nhìn trước tối đa
+        self.num_forward_checks = 0 
+        self.max_lookahead = 3  
     
     def _is_promising(self, state, depth):
         """Kiểm tra xem trạng thái có triển vọng dẫn đến đích không"""
-        # Nếu độ sâu gần đạt giới hạn, kiểm tra xem có thể đạt đến đích không
         if depth > self.max_depth - self.max_lookahead:
             return self._calculate_heuristic(state) <= (self.max_depth - depth)
         
@@ -1785,7 +1998,6 @@ class ForwardCheckingSearch(BacktrackingSearch):
         found_solution = False
         
         for _, next_state in next_states_with_heuristic:
-            # Bỏ qua nếu đã thăm
             if next_state in self.visited:
                 continue
             
@@ -1830,10 +2042,10 @@ class ForwardCheckingSearch(BacktrackingSearch):
 class MinConflictsSearch(HeuristicSearch):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.max_iterations = 10000  # Số lần lặp tối đa
-        self.max_plateau = 100  # Số bước tối đa không cải thiện
-        self.restart_threshold = 500  # Số bước không cải thiện trước khi khởi động lại
-        self.random_move_prob = 0.1  # Xác suất di chuyển ngẫu nhiên
+        self.max_iterations = 10000 
+        self.max_plateau = 100  
+        self.restart_threshold = 500  
+        self.random_move_prob = 0.1  
         self.num_iterations = 0  
         self.num_restarts = 0  
         self.conflicts_history = []  
@@ -1895,7 +2107,6 @@ class MinConflictsSearch(HeuristicSearch):
         state_list = [0 if x == '_' else int(x) for x in state]
         target_list = [0 if x == '_' else int(x) for x in target]
         
-        # Tính số nghịch thế trong state
         state_inversions = 0
         for i in range(len(state_list)):
             if state_list[i] == 0:  
@@ -1904,7 +2115,6 @@ class MinConflictsSearch(HeuristicSearch):
                 if state_list[j] != 0 and state_list[i] > state_list[j]:
                     state_inversions += 1
         
-        # Tính số nghịch thế trong target
         target_inversions = 0
         for i in range(len(target_list)):
             if target_list[i] == 0:  
@@ -1913,7 +2123,6 @@ class MinConflictsSearch(HeuristicSearch):
                 if target_list[j] != 0 and target_list[i] > target_list[j]:
                     target_inversions += 1
         
-        # Kiểm tra tính chẵn lẻ của số nghịch thế
         return (state_inversions % 2) == (target_inversions % 2)
     
     def solve(self):
@@ -1921,14 +2130,12 @@ class MinConflictsSearch(HeuristicSearch):
         import random
         import time
         
-        # Kiểm tra tính khả thi
         if not self._is_solvable(self.initial_state, self.target_state):
             print("Bài toán không thể giải được!")
             return None
         
         start_time = time.time()
         
-        # Khởi tạo
         current = self.initial_state
         best_state = current
         best_conflicts = self._calculate_conflicts(current)
@@ -1940,7 +2147,6 @@ class MinConflictsSearch(HeuristicSearch):
         self.num_restarts = 0
         plateau_counter = 0
         
-        # Lưu số xung đột ban đầu
         self.conflicts_history.append(best_conflicts)
         
         while self.num_iterations < self.max_iterations:
@@ -1950,7 +2156,6 @@ class MinConflictsSearch(HeuristicSearch):
                 print(f"Tìm thấy giải pháp sau {self.num_iterations} lần lặp, {self.num_restarts} lần khởi động lại, {time.time() - start_time:.3f}s")
                 return self._reconstruct_path(current, parent)
             
-            # In tiến trình mỗi 1000 bước
             if self.num_iterations % 1000 == 0:
                 print(f"Đã thực hiện {self.num_iterations} bước, {self.num_restarts} lần khởi động lại, xung đột hiện tại: {self._calculate_conflicts(current)}")
             
@@ -2004,14 +2209,14 @@ class MinConflictsSearch(HeuristicSearch):
 class QLearningPuzzleSolver(SearchAlgorithm):
     def __init__(self, initial_state, target_state):
         super().__init__(initial_state, target_state)
-        self.alpha = 0.1
-        self.gamma = 0.9
-        self.epsilon = 0.3
-        self.max_episodes = 5000
-        self.max_steps_per_episode = 100
-        self.q_table = {}
-        self.best_solution = None
-        self.best_solution_length = float('inf')
+        self.alpha = 0.1 # tốc độ học
+        self.gamma = 0.9 # hệ số chiết khấu
+        self.epsilon = 0.3 # xác suất khám phá
+        self.max_episodes = 5000 # số lần lặp
+        self.max_steps_per_episode = 100 # số bước tối đa trong mỗi lần lặp
+        self.q_table = {} # bảng Q
+        self.best_solution = None # giải pháp tốt nhất
+        self.best_solution_length = float('inf') # độ dài của giải pháp tốt nhất
         
     def _calculate_reward(self, state):
         reward = 0
@@ -3234,13 +3439,10 @@ class CSPVisualizer:
         else:
             subgraph = self.search_tree
         
-        # Vị trí các nút
         pos = {n: self.node_positions[n] for n in subgraph.nodes()}
         
-        # Màu các nút
         node_colors = [self.node_colors.get(n, "lightblue") for n in subgraph.nodes()]
         
-        # Vẽ đồ thị
         nx.draw(subgraph, pos, ax=self.ax, with_labels=False, 
                 node_size=300, node_color=node_colors, 
                 edge_color='gray', arrows=True)
@@ -3343,21 +3545,17 @@ class BacktrackingSearchVisual(BacktrackingSearch):
                     self.visualizer.wait()
             return True
         
-        # Nếu đạt đến độ sâu tối đa
         if depth >= self.max_depth:
             return False
         
-        # Lấy các trạng thái kế tiếp
         state_obj = PuzzleState(current_state)
         next_states = state_obj.get_next_states()
         
-        # Sắp xếp các trạng thái kế tiếp 
         next_states_with_heuristic = [(self._calculate_heuristic(state), state) for state in next_states]
         next_states_with_heuristic.sort()
         
         found_solution = False
         
-        # Thử từng trạng thái kế tiếp
         for _, next_state in next_states_with_heuristic:
             if next_state in self.visited:
                 continue
@@ -3376,16 +3574,13 @@ class BacktrackingSearchVisual(BacktrackingSearch):
                 self.visualizer.update_status(f"Exploring depth {depth + 1}")
                 self.visualizer.wait()
             
-            # Đệ quy
             if self._backtrack(next_state, depth + 1):
                 found_solution = True
                 break
             
-            # Quay lui
             self.path.pop()
             self.num_backtracks += 1
             
-            # Thêm vào đường đi 
             step_num = len(self.console_path)
             self.console_path.append(("backtrack", next_state, current_state))
             print(f"{step_num}. BACKTRACK: {next_state} (from {current_state})")
@@ -3430,13 +3625,11 @@ class ForwardCheckingSearchVisual(ForwardCheckingSearch):
         self.num_forward_checks = 0
         self.console_path = []
         
-        # Thêm trạng thái ban đầu 
         self.console_path.append(("start", self.initial_state, None))
         print("0. START:", self.initial_state)
         self._print_state_grid(self.initial_state)
         print()
         
-        # Bắt đầu backtracking với forward checking
         self._backtrack(self.initial_state, 0)
         
         print(f"\nSố lần quay lui: {self.num_backtracks}")
@@ -3749,6 +3942,580 @@ class MinConflictsSearchVisual(MinConflictsSearch):
         for row in range(3):
             print("   " + " ".join(state[row*3:row*3+3]).replace("_", " "))
 
+class BeliefStateSearchVisual(BeliefStateSearch):
+    def __init__(self, initial_state, target_state):
+        super().__init__(initial_state, target_state)
+        self.visualizer = None
+        self.paused = False
+        self.step_counter = 0
+        self.current_state_index = 0
+        self.state_paths = {}
+        self.state_actions = {}
+        self.states_searched = set()
+        
+    def solve(self, visualizer=None):
+        """
+        Tìm dãy hành động để giải quyết bài toán cho 6 trạng thái niềm tin ban đầu, với hiển thị trực quan
+        """
+        self.visualizer = visualizer
+        self.step_counter = 0
+        self.individual_paths = {}
+        self.individual_actions = {}
+        self.state_histories = {}
+        
+        if self.visualizer:
+            self.visualizer.update_status("Hiển thị 6 trạng thái niềm tin ban đầu đã được định nghĩa sẵn...")
+            self.visualizer.wait()
+            
+            self.visualizer.draw_belief_states(self.initial_belief, 0, None)
+            self.visualizer.wait()
+        
+        initial_states = list(self.initial_belief)
+        for i, state in enumerate(initial_states):
+            if state == self.target_state:
+                if self.visualizer:
+                    self.visualizer.update_status(f"Trạng thái {i+1} đã là trạng thái đích, không cần giải!")
+                    self.visualizer.wait()
+                
+                self.individual_paths[state] = [state]
+                self.individual_actions[state] = []
+                self.state_histories[state] = [state]
+                continue
+            
+            if self.visualizer:
+                self.visualizer.update_status(f"Giải trạng thái {i+1}/{len(initial_states)}: {state}")
+                self.visualizer.wait()
+            
+            self.current_state_index = i
+            path, actions, history = self._search_individual_state_visual(state)
+            
+            if path:
+                self.individual_paths[state] = path
+                self.individual_actions[state] = actions
+                self.state_histories[state] = history
+                
+                if self.visualizer:
+                    self.visualizer.update_status(f"Đã tìm thấy lời giải cho trạng thái {i+1}!")
+                    self.visualizer.wait()
+            else:
+                if self.visualizer:
+                    self.visualizer.update_status(f"Không tìm thấy lời giải cho trạng thái {i+1}")
+                    self.visualizer.wait()
+        
+        if self.individual_paths and self.visualizer:
+            self.visualizer.update_status("Hoàn thành! Hiển thị tất cả các lời giải tìm được...")
+            self.visualizer.draw_all_solutions(self.individual_paths)
+            self.visualizer.wait()
+        
+        if self.individual_paths:
+            shortest_state = min(self.individual_paths.keys(), 
+                               key=lambda s: len(self.individual_paths[s]))
+            self.solution_path = self.individual_paths[shortest_state]
+            self.solution_actions = self.individual_actions[shortest_state]
+            
+            if self.visualizer:
+                self.visualizer.update_status(f"Lời giải ngắn nhất: {len(self.solution_path)-1} bước từ trạng thái {shortest_state}")
+                self.visualizer.wait()
+            
+            return self.solution_path
+        
+        if self.visualizer:
+            self.visualizer.update_status("Không tìm thấy lời giải nào cho tất cả các trạng thái.")
+            self.visualizer.wait()
+            
+        return None
+        
+    def _search_individual_state_visual(self, start_state):
+        """
+        Tìm kiếm đường đi cho một trạng thái cụ thể với hiển thị trực quan
+        """
+        from queue import PriorityQueue
+        
+        frontier = PriorityQueue()
+        frontier.put((0, 0, start_state, []))  
+        
+        visited = {start_state}
+        counter = 1 
+        state_history = [start_state]
+        action_history = []
+        step_count = 0
+        
+        self.states_searched.add(start_state)
+        
+        while not frontier.empty():
+            step_count += 1
+            self.step_counter += 1
+            
+            if self.visualizer and step_count % 5 == 0:
+                current_states = list(self.initial_belief)
+                current_states[self.current_state_index] = state_history[-1]
+                self.visualizer.draw_belief_states(set(current_states), step_count, self.current_state_index)
+                self.visualizer.update_status(f"Giải trạng thái {self.current_state_index+1}: Bước {step_count}, đã khám phá {len(visited)} trạng thái")
+                self.visualizer.wait()
+            
+            _, _, current_state, actions = frontier.get()
+            
+            if current_state == self.target_state:
+                path = self._reconstruct_path(start_state, actions)
+                
+                if self.visualizer:
+                    current_states = list(self.initial_belief)
+                    current_states[self.current_state_index] = self.target_state
+                    self.visualizer.draw_belief_states(set(current_states), step_count, self.current_state_index)
+                    self.visualizer.update_status(f"Đã tìm thấy lời giải cho trạng thái {self.current_state_index+1} sau {step_count} bước!")
+                    self.visualizer.wait()
+                
+                return path, actions, state_history
+            
+            for action in range(len(self.directions)):
+                next_state = self._apply_single_action(current_state, action)
+                
+                if next_state is not None and next_state not in visited:
+                    visited.add(next_state)
+                    
+                    priority = len(actions) + 1 + self._get_manhattan_distance(next_state)
+                    
+                    state_history.append(next_state)
+                    action_history.append(self.direction_names[action])
+                    
+                    frontier.put((priority, counter, next_state, actions + [action]))
+                    counter += 1
+        
+        return None, None, state_history
+
+class BeliefStateVisualizer:
+    def __init__(self, root, algorithm, initial_state, target_state):
+        self.root = root
+        self.algorithm = algorithm
+        self.initial_state = initial_state
+        self.target_state = target_state
+        self.paused = False
+        self.delay = 500  
+        
+        self.window = tk.Toplevel(root)
+        self.window.title("Belief State Search Visualization")
+        self.window.geometry("900x700")
+        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        main_frame = tk.Frame(self.window)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        belief_frame = tk.Frame(main_frame)
+        belief_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        self.canvas = tk.Canvas(belief_frame, bg="white", width=880, height=550)
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+        
+        control_frame = tk.Frame(main_frame)
+        control_frame.pack(fill=tk.X, pady=5)
+        
+        self.pause_button = tk.Button(control_frame, text="Pause", command=self.toggle_pause)
+        self.pause_button.pack(side=tk.LEFT, padx=5)
+        
+        speed_label = tk.Label(control_frame, text="Speed:")
+        speed_label.pack(side=tk.LEFT, padx=(20, 5))
+        
+        self.speed_slider = tk.Scale(control_frame, from_=1, to=10, orient=tk.HORIZONTAL, 
+                                    command=self.update_speed)
+        self.speed_slider.set(5)
+        self.speed_slider.pack(side=tk.LEFT)
+        
+        self.status_var = tk.StringVar(value="Status: Initializing...")
+        status_label = tk.Label(control_frame, textvariable=self.status_var)
+        status_label.pack(side=tk.LEFT, padx=20)
+        
+        info_frame = tk.Frame(main_frame)
+        info_frame.pack(fill=tk.X, pady=5)
+        
+        self.info_var = tk.StringVar(value="Trạng thái đích: " + target_state)
+        info_label = tk.Label(info_frame, textvariable=self.info_var)
+        info_label.pack(side=tk.LEFT)
+        
+        self.renderer = PuzzleRenderer(self.canvas)
+        
+        self.path = []
+        
+    def on_close(self):
+        """Xử lý khi đóng cửa sổ"""
+        self.paused = True
+        self.window.destroy()
+    
+    def toggle_pause(self):
+        """Tạm dừng/tiếp tục hiển thị"""
+        self.paused = not self.paused
+        self.pause_button.config(text="Continue" if self.paused else "Pause")
+    
+    def update_speed(self, value):
+        """Cập nhật tốc độ hiển thị"""
+        self.delay = 1100 - int(value) * 100
+    
+    def update_status(self, message):
+        """Cập nhật thông báo trạng thái"""
+        self.status_var.set(f"Status: {message}")
+        self.window.update()
+    
+    def draw_belief_states(self, belief_states, step, current_index=None):
+        """Vẽ các trạng thái niềm tin hiện tại"""
+        self.canvas.delete("all")
+        
+        if current_index is not None:
+            self.info_var.set(f"Đang giải trạng thái {current_index+1}/6 | Bước: {step} | Đích: {self.target_state}")
+        else:
+            self.info_var.set(f"6 trạng thái niềm tin ban đầu | Trạng thái đích: {self.target_state}")
+        
+        states_list = list(belief_states)
+        num_states = len(states_list)
+        
+        rows = 2
+        cols = 3
+        
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        
+        cell_width = min(200, (canvas_width - 80) // cols)
+        cell_height = min(200, (canvas_height - 80) // rows)
+        
+        padding_x = (canvas_width - (cell_width * cols)) // (cols + 1)
+        padding_y = (canvas_height - (cell_height * rows)) // (rows + 1)
+        
+        self.canvas.create_text(canvas_width // 2, 15, 
+                               text="GIẢI TỪNG TRẠNG THÁI NIỀM TIN", 
+                               font=("Arial", 14, "bold"), fill="blue")
+        
+        for i, state in enumerate(states_list):
+            if i >= rows * cols:
+                break  
+                
+            row = i // cols
+            col = i % cols
+            
+            x = col * (cell_width + padding_x) + padding_x
+            y = row * (cell_height + padding_y) + padding_y + 30  
+            
+            background_color = "lightblue"
+            outline_color = "navy"
+            outline_width = 2
+            
+            if current_index is not None and i == current_index:
+                background_color = "#e6fff2" 
+                outline_color = "green"
+                outline_width = 3
+            
+            self.canvas.create_rectangle(x, y, x + cell_width, y + cell_height, 
+                                        fill=background_color, outline=outline_color, width=outline_width)
+            
+            state_title = f"Trạng thái {i+1}"
+            if current_index is not None and i == current_index:
+                state_title += " (đang giải)"
+            
+            self.canvas.create_text(x + cell_width//2, y - 12, 
+                                   text=state_title, 
+                                   font=("Arial", 10, "bold" if i == current_index else "normal"), 
+                                   fill=outline_color)
+            
+            for r in range(3):
+                for c in range(3):
+                    index = r * 3 + c
+                    tile_value = state[index]
+                    
+                    tile_x = x + c * (cell_width // 3)
+                    tile_y = y + r * (cell_height // 3)
+                    tile_size = min(cell_width // 3, cell_height // 3)
+                    
+                    if tile_value == '_':
+                        self.canvas.create_rectangle(tile_x, tile_y, 
+                                                    tile_x + tile_size, tile_y + tile_size, 
+                                                    fill="white", outline="gray")
+                    else:
+                        color = "#e6f7ff" if tile_value == self.target_state[index] else "#ffcccc"
+                        outline_color = "green" if tile_value == self.target_state[index] else "gray"
+                        
+                        self.canvas.create_rectangle(tile_x, tile_y, 
+                                                   tile_x + tile_size, tile_y + tile_size, 
+                                                   fill=color, outline=outline_color)
+                        self.canvas.create_text(tile_x + tile_size/2, tile_y + tile_size/2, 
+                                              text=tile_value, font=("Arial", 14, "bold"))
+            
+            if state == self.target_state:
+                self.canvas.create_rectangle(x - 5, y - 5, x + cell_width + 5, y + cell_height + 5, 
+                                          outline="red", width=3)
+                self.canvas.create_text(x + cell_width/2, y - 15, 
+                                      text="ĐÃ GIẢI!", fill="red", font=("Arial", 12, "bold"))
+            
+            distance = self.algorithm._get_manhattan_distance(state)
+            self.canvas.create_text(x + cell_width//2, y + cell_height + 15, 
+                                  text=f"Khoảng cách: {distance}", 
+                                  font=("Arial", 9), fill="navy")
+        
+        instruction_text = "Đang tìm kiếm lời giải cho từng trạng thái..."
+        if current_index is not None:
+            instruction_text = f"Đang áp dụng A* search cho trạng thái {current_index+1}"
+        
+        self.canvas.create_text(canvas_width // 2, canvas_height - 20, 
+                               text=instruction_text, 
+                               font=("Arial", 12), fill="navy")
+        
+        self.window.update()
+    
+    def draw_individual_solution(self, start_state, path):
+        """Vẽ lời giải cho một trạng thái cụ thể"""
+        title = f"Lời giải cho trạng thái: {start_state}"
+        self._create_solution_window(title, path, start_state)
+    
+    def draw_all_solutions(self, solutions_dict):
+        """Vẽ tất cả các lời giải tìm được"""
+        summary_window = tk.Toplevel(self.root)
+        summary_window.title("Tổng hợp lời giải")
+        summary_window.geometry("800x600")
+        
+        info_frame = tk.Frame(summary_window)
+        info_frame.pack(pady=10, fill=tk.X)
+        
+        tk.Label(info_frame, text="TỔNG HỢP LỜI GIẢI", 
+                font=("Arial", 16, "bold")).pack()
+        
+        tk.Label(info_frame, 
+                text=f"Tổng số trạng thái: {len(self.algorithm.initial_belief)}, Số lời giải tìm được: {len(solutions_dict)}",
+                font=("Arial", 12)).pack(pady=5)
+        
+        solutions_frame = tk.Frame(summary_window)
+        solutions_frame.pack(pady=10, fill=tk.BOTH, expand=True)
+        
+        columns = ("Trạng thái", "Độ dài đường đi", "Khoảng cách ban đầu", "Hành động đầu tiên", "Trạng thái")
+        tree = ttk.Treeview(solutions_frame, columns=columns, show="headings")
+        
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=150)
+        
+        for state, path in solutions_dict.items():
+            initial_distance = self.algorithm._get_manhattan_distance(state)
+            
+            state_status = "Cần giải"
+            if state == self.target_state:
+                state_status = "Đã là đích"
+            
+            first_action = "N/A"
+            if len(path) > 1:
+                for idx, (dr, dc) in enumerate(self.algorithm.directions):
+                    blank_idx_1 = path[0].index('_')
+                    r1, c1 = divmod(blank_idx_1, 3)
+                    
+                    blank_idx_2 = path[1].index('_')
+                    r2, c2 = divmod(blank_idx_2, 3)
+                    
+                    if r2 - r1 == dr and c2 - c1 == dc:
+                        first_action = self.algorithm.direction_names[idx]
+                        break
+            
+            tree.insert("", tk.END, values=(state, len(path)-1, initial_distance, first_action, state_status), 
+                     tags=("goal_state" if state == self.target_state else "normal_state"))
+        
+        tree.tag_configure("goal_state", background="#e6fff2")
+        tree.tag_configure("normal_state", background="white")
+            
+        tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        actions_frame = tk.Frame(summary_window)
+        actions_frame.pack(pady=10, fill=tk.X)
+        
+        def view_solution():
+            selected_items = tree.selection()
+            if selected_items:
+                item = selected_items[0]
+                state = tree.item(item, "values")[0]
+                if state in solutions_dict:
+                    self.draw_individual_solution(state, solutions_dict[state])
+        
+        view_button = tk.Button(actions_frame, text="Xem lời giải chi tiết", command=view_solution)
+        view_button.pack(pady=10)
+    
+    def _create_solution_window(self, title, path, start_state):
+        """Tạo cửa sổ hiển thị lời giải chi tiết"""
+        solution_window = tk.Toplevel(self.root)
+        solution_window.title(title)
+        solution_window.geometry("400x550")
+        
+        info_frame = tk.Frame(solution_window)
+        info_frame.pack(pady=10, fill=tk.X)
+        
+        tk.Label(info_frame, text=f"Độ dài đường đi: {len(path)-1} bước", 
+                font=("Arial", 12, "bold")).pack()
+        
+        solution_canvas = tk.Canvas(solution_window, bg="white", width=380, height=420)
+        solution_canvas.pack(pady=10)
+        
+        control_frame = tk.Frame(solution_window)
+        control_frame.pack(fill=tk.X, pady=5)
+        
+        current_step = [0]  
+        
+        def update_display():
+            solution_canvas.delete("all")
+            i = current_step[0]
+            state = path[i]
+            
+            solution_canvas.create_text(190, 20, 
+                                      text=f"Bước: {i+1}/{len(path)}", 
+                                      font=("Arial", 14, "bold"))
+            
+            cell_width = 250
+            cell_height = 250
+            x = (380 - cell_width) // 2
+            y = 50
+            
+            solution_canvas.create_rectangle(x, y, x + cell_width, y + cell_height, 
+                                          fill="lightgreen" if state == self.target_state else "lightblue", 
+                                          outline="navy", width=2)
+            
+            for r in range(3):
+                for c in range(3):
+                    index = r * 3 + c
+                    tile_value = state[index]
+                    
+                    tile_x = x + c * (cell_width // 3)
+                    tile_y = y + r * (cell_height // 3)
+                    tile_size = min(cell_width // 3, cell_height // 3)
+                    
+                    if tile_value == '_':
+                        solution_canvas.create_rectangle(tile_x, tile_y, 
+                                                      tile_x + tile_size, tile_y + tile_size, 
+                                                      fill="white", outline="gray")
+                    else:
+                        color = "#e6f7ff" if tile_value == self.target_state[index] else "#ffcccc"
+                        outline_color = "green" if tile_value == self.target_state[index] else "gray"
+                        
+                        solution_canvas.create_rectangle(tile_x, tile_y, 
+                                                      tile_x + tile_size, tile_y + tile_size, 
+                                                      fill=color, outline=outline_color)
+                        solution_canvas.create_text(tile_x + tile_size/2, tile_y + tile_size/2, 
+                                                 text=tile_value, font=("Arial", 24, "bold"))
+            
+            if i > 0:
+                action_idx = -1
+                for idx, (dr, dc) in enumerate(self.algorithm.directions):
+                    prev_state = path[i-1]
+                    prev_blank_idx = prev_state.index('_')
+                    prev_row, prev_col = divmod(prev_blank_idx, 3)
+                    
+                    current_blank_idx = state.index('_')
+                    current_row, current_col = divmod(current_blank_idx, 3)
+                    
+                    if current_row - prev_row == dr and current_col - prev_col == dc:
+                        action_idx = idx
+                        break
+                
+                action_name = self.algorithm.direction_names[action_idx] if action_idx >= 0 else "UNKNOWN"
+                solution_canvas.create_text(190, y + cell_height + 30, 
+                                         text=f"Hành động: {action_name}", font=("Arial", 16, "bold"))
+                
+                arrow_colors = {
+                    "UP": "blue", "DOWN": "green", "LEFT": "red", "RIGHT": "purple"
+                }
+                arrow_color = arrow_colors.get(action_name, "black")
+                
+                if action_name == "UP":
+                    solution_canvas.create_line(190, y - 20, 190, y - 5, width=3, arrow=tk.LAST, fill=arrow_color)
+                elif action_name == "DOWN":
+                    solution_canvas.create_line(190, y + cell_height + 5, 190, y + cell_height + 20, width=3, arrow=tk.LAST, fill=arrow_color)
+                elif action_name == "LEFT":
+                    solution_canvas.create_line(x - 20, y + cell_height // 2, x - 5, y + cell_height // 2, width=3, arrow=tk.LAST, fill=arrow_color)
+                elif action_name == "RIGHT":
+                    solution_canvas.create_line(x + cell_width + 5, y + cell_height // 2, x + cell_width + 20, y + cell_height // 2, width=3, arrow=tk.LAST, fill=arrow_color)
+            
+            distance = self.algorithm._get_manhattan_distance(state)
+            solution_canvas.create_text(190, y + cell_height + 60, 
+                                     text=f"Khoảng cách Manhattan: {distance}", 
+                                     font=("Arial", 12))
+            
+            if state == self.target_state:
+                solution_canvas.create_text(190, y + cell_height + 85, 
+                                         text="ĐÃ ĐẠT ĐÍCH!", 
+                                         font=("Arial", 14, "bold"), fill="green")
+        
+        def next_step():
+            if current_step[0] < len(path) - 1:
+                current_step[0] += 1
+                update_display()
+        
+        def prev_step():
+            if current_step[0] > 0:
+                current_step[0] -= 1
+                update_display()
+        
+        prev_button = tk.Button(control_frame, text="Trước", command=prev_step)
+        prev_button.pack(side=tk.LEFT, padx=20)
+        
+        next_button = tk.Button(control_frame, text="Sau", command=next_step)
+        next_button.pack(side=tk.RIGHT, padx=20)
+        
+        slider_frame = tk.Frame(solution_window)
+        slider_frame.pack(fill=tk.X, pady=10)
+        
+        def update_step(val):
+            current_step[0] = int(float(val))
+            update_display()
+        
+        step_slider = tk.Scale(slider_frame, from_=0, to=len(path)-1, 
+                              orient=tk.HORIZONTAL, command=update_step)
+        step_slider.pack(fill=tk.X, padx=20)
+        
+        update_display()
+        
+    def draw_path(self, path):
+        """Vẽ đường đi từ trạng thái ban đầu đến đích"""
+        path_window = tk.Toplevel(self.root)
+        path_window.title("Đường đi giải pháp")
+        path_window.geometry("800x600")
+        
+        info_frame = tk.Frame(path_window)
+        info_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        tk.Label(info_frame, text=f"Độ dài đường đi: {len(path) - 1} bước", 
+               font=("Arial", 12, "bold")).pack(side=tk.LEFT)
+        
+        path_frame = tk.Frame(path_window)
+        path_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        path_canvas = tk.Canvas(path_frame)
+        path_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        path_scrollbar = tk.Scrollbar(path_frame, command=path_canvas.yview)
+        path_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        path_canvas.configure(yscrollcommand=path_scrollbar.set)
+        
+        inner_frame = tk.Frame(path_canvas)
+        path_canvas.create_window((0, 0), window=inner_frame, anchor=tk.NW)
+        
+        for i, state in enumerate(path):
+            step_frame = tk.Frame(inner_frame, bd=1, relief=tk.RAISED, padx=10, pady=10)
+            step_frame.pack(fill=tk.X, pady=5)
+            
+            title = f"Bước {i}: Bắt đầu" if i == 0 else f"Bước {i}: Di chuyển"
+            if i == len(path) - 1:
+                title += " (Đích)"
+            
+            tk.Label(step_frame, text=title, font=("Arial", 10, "bold")).pack(anchor=tk.W)
+            
+            state_canvas = tk.Canvas(step_frame, width=150, height=150, bg="white")
+            state_canvas.pack(pady=5)
+            
+            self.draw_state(state, state_canvas)
+        
+        inner_frame.update_idletasks()
+        path_canvas.config(scrollregion=path_canvas.bbox("all"))
+    
+    def wait(self):
+        """Chờ theo tốc độ hiển thị"""
+        if self.paused:
+            while self.paused:
+                self.window.update()
+                time.sleep(0.1)
+        
+        self.window.after(self.delay)
+        self.window.update()
+
 class AlgorithmFactoryVisual:
     @staticmethod
     def create_algorithm(algorithm_name, initial_state, target_state):
@@ -3758,6 +4525,10 @@ class AlgorithmFactoryVisual:
             "Forward Checking": ForwardCheckingSearchVisual,
             "MinConflicts": MinConflictsSearchVisual,
             "Min Conflicts": MinConflictsSearchVisual,
+            "BeliefState": BeliefStateSearchVisual,
+            "Belief State": BeliefStateSearchVisual,
+            "PartiallyObservable": PartiallyObservableSearchVisual,
+            "Partially Observable": PartiallyObservableSearchVisual,
         }
         return algorithms.get(algorithm_name, BacktrackingSearchVisual)(initial_state, target_state)
 
@@ -3783,36 +4554,43 @@ class PuzzleSolverVisual(PuzzleSolver):
     def create_ui(self):
         super().create_ui()
         
-        visualize_button = tk.Button(self.status_frame, text="Visualize CSP", command=self.show_visualization)
+        visualize_button = tk.Button(self.status_frame, text="Visualize Algorithm", command=self.show_visualization)
         visualize_button.pack(side=tk.RIGHT, padx=10)
     
     def show_visualization(self):
-        """Hiển thị trực quan cho thuật toán CSP"""
+        """Hiển thị trực quan cho thuật toán CSP, Belief State, hoặc Partially Observable"""
         if self.visualization_active:
             messagebox.showinfo("Thông báo", "Hiển thị trực quan đang hoạt động!")
             return
         
         algorithm_name = self.algorithm_var.get()
         
-        if algorithm_name not in ["Backtracking", "ForwardChecking", "Forward Checking", "MinConflicts", "Min Conflicts"]:
-            messagebox.showinfo("Thông báo", "Chỉ hỗ trợ hiển thị trực quan cho các thuật toán CSP!")
+        if algorithm_name in ["Backtracking", "ForwardChecking", "Forward Checking", "MinConflicts", "Min Conflicts"]:
+            self.visualization_active = True
+            self.algorithm = AlgorithmFactoryVisual.create_algorithm(algorithm_name, self.initial, self.target)
+            self.visualizer = CSPVisualizer(self.root, self.algorithm, self.initial, self.target)
+            threading.Thread(target=self.run_visualization, daemon=True).start()
+        elif algorithm_name in ["BeliefState", "Belief State"]:
+            self.visualization_active = True
+            self.algorithm = AlgorithmFactoryVisual.create_algorithm(algorithm_name, self.initial, self.target)
+            self.visualizer = BeliefStateVisualizer(self.root, self.algorithm, self.initial, self.target)
+            threading.Thread(target=self.run_visualization_belief_state, daemon=True).start()
+        elif algorithm_name in ["PartiallyObservable", "Partially Observable"]:
+            self.visualization_active = True
+            self.algorithm = AlgorithmFactoryVisual.create_algorithm(algorithm_name, self.initial, self.target)
+            self.visualizer = PartiallyObservableVisualizer(self.root, self.algorithm, self.initial, self.target)
+            threading.Thread(target=self.run_visualization_partially_observable, daemon=True).start()
+        else:
+            messagebox.showinfo("Thông báo", "Chỉ hỗ trợ hiển thị trực quan cho các thuật toán CSP, Belief State và Partially Observable!")
             return
-        
-        self.visualization_active = True
-        
-        self.algorithm = AlgorithmFactoryVisual.create_algorithm(algorithm_name, self.initial, self.target)
-        
-        self.visualizer = CSPVisualizer(self.root, self.algorithm, self.initial, self.target)
-        
-        threading.Thread(target=self.run_visualization, daemon=True).start()
     
     def run_visualization(self):
-        """Chạy thuật toán với hiển thị trực quan trong luồng riêng biệt"""
+        """Chạy thuật toán CSP với hiển thị trực quan trong luồng riêng biệt"""
         try:
-            self.status_label.config(text="Trạng thái: Đang hiển thị trực quan...")
+            self.status_label.config(text="Trạng thái: Đang hiển thị trực quan CSP...")
             self.root.update()
         
-            print("\n===== BẮT ĐẦU HIỂN THỊ TRỰC QUAN =====")
+            print("\n===== BẮT ĐẦU HIỂN THỊ TRỰC QUAN CSP =====")
             print(f"Thuật toán: {self.algorithm_var.get()}")
             print(f"Trạng thái ban đầu: {self.initial}")
             print(f"Trạng thái đích: {self.target}")
@@ -3846,6 +4624,103 @@ class PuzzleSolverVisual(PuzzleSolver):
         
         except Exception as e:
             print(f"Lỗi khi hiển thị trực quan: {e}")
+            self.status_label.config(text=f"Lỗi: {str(e)}")
+            messagebox.showerror("Lỗi", str(e))
+        finally:
+            self.visualization_active = False
+            
+    def run_visualization_belief_state(self):
+        """Chạy thuật toán Belief State với hiển thị trực quan trong luồng riêng biệt"""
+        try:
+            self.status_label.config(text="Trạng thái: Đang hiển thị trực quan Belief State...")
+            self.root.update()
+        
+            print("\n===== BẮT ĐẦU HIỂN THỊ TRỰC QUAN BELIEF STATE =====")
+            print(f"Thuật toán: {self.algorithm_var.get()}")
+            print(f"Trạng thái ban đầu: {self.initial}")
+            print(f"Trạng thái đích: {self.target}")
+            print("=======================================\n")
+        
+            start_time = time.time()
+            self.path = self.algorithm.solve(visualizer=self.visualizer)
+            end_time = time.time()
+        
+            print(f"\n===== KẾT QUẢ HIỂN THỊ TRỰC QUAN BELIEF STATE =====")
+            print(f"Thời gian thực thi: {end_time - start_time:.3f}s")
+            if self.path:
+                print(f"Độ dài đường đi: {len(self.path) - 1}")
+                print(f"Số trạng thái niềm tin ban đầu: {len(self.algorithm.initial_belief)}")
+                print(f"Số trạng thái niềm tin đã khám phá: {len(self.algorithm.belief_states_history)}")
+            else:
+                print("Không tìm thấy đường đi")
+            print("=======================================\n")
+        
+            if self.path:
+                self.status_label.config(text=f"Trạng thái: Đã giải. Thời gian: {end_time - start_time:.3f}s")
+                self.step_label.config(text=f"Bước: 0/{len(self.path) - 1}")
+            else:
+                self.status_label.config(text="Trạng thái: Không tìm thấy lời giải!")
+                self.step_label.config(text="Bước: 0/0")
+        
+            self.current_index = 0
+            self.animation_running = False
+            self.pause_animation = False
+            self.play_pause_button.config(text="Play")
+        
+            self.update_display()
+        
+        except Exception as e:
+            print(f"Lỗi khi hiển thị trực quan Belief State: {e}")
+            traceback.print_exc() 
+            self.status_label.config(text=f"Lỗi: {str(e)}")
+            messagebox.showerror("Lỗi", str(e))
+        finally:
+            self.visualization_active = False
+            
+    def run_visualization_partially_observable(self):
+        """Chạy thuật toán Partially Observable Search với hiển thị trực quan trong luồng riêng biệt"""
+        try:
+            self.status_label.config(text="Trạng thái: Đang hiển thị trực quan Partially Observable Search...")
+            self.root.update()
+        
+            print("\n===== BẮT ĐẦU HIỂN THỊ TRỰC QUAN PARTIALLY OBSERVABLE SEARCH =====")
+            print(f"Thuật toán: {self.algorithm_var.get()}")
+            print(f"Trạng thái ban đầu: {self.initial}")
+            print(f"Trạng thái đích: {self.target}")
+            print("=======================================\n")
+        
+            start_time = time.time()
+            self.path = self.algorithm.solve(visualizer=self.visualizer)
+            end_time = time.time()
+        
+            print(f"\n===== KẾT QUẢ HIỂN THỊ TRỰC QUAN PARTIALLY OBSERVABLE SEARCH =====")
+            print(f"Thời gian thực thi: {end_time - start_time:.3f}s")
+            if self.path:
+                print(f"Độ dài đường đi: {len(self.path) - 1}")
+                print(f"Số belief states đã khám phá: {len(self.algorithm.belief_states_history)}")
+            else:
+                print("Không tìm thấy đường đi")
+            print("=======================================\n")
+        
+            if self.path:
+                self.status_label.config(text=f"Trạng thái: Đã giải. Thời gian: {end_time - start_time:.3f}s")
+                self.step_label.config(text=f"Bước: 0/{len(self.path) - 1}")
+            else:
+                self.status_label.config(text="Trạng thái: Không tìm thấy lời giải!")
+                self.step_label.config(text="Bước: 0/0")
+        
+            self.current_index = 0
+            self.animation_running = False
+            self.pause_animation = False
+            self.play_pause_button.config(text="Play")
+        
+            self.update_display()
+        
+        except Exception as e:
+            print(f"Lỗi khi hiển thị trực quan Partially Observable Search: {e}")
+            traceback.print_exc()  # In thông tin chi tiết về lỗi
+            self.status_label.config(text=f"Lỗi: {str(e)}")
+            messagebox.showerror("Lỗi", str(e))
         finally:
             self.visualization_active = False
     
@@ -4044,6 +4919,403 @@ class AlgorithmComparison:
             summary += " | ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row)) + "\n"
         
         return summary
+
+class PartiallyObservableSearchVisual(PartiallyObservableSearch):
+    def __init__(self, initial_state, target_state):
+        super().__init__(initial_state, target_state)
+        self.visualizer = None
+        self.paused = False
+        self.search_speed = 1.0 
+        self.step_counter = 0    
+        self.current_belief = None  
+    
+    def wait(self):
+        """Tạm dừng thực thi nếu người dùng đã nhấn nút tạm dừng"""
+        if self.visualizer:
+            self.visualizer.wait()
+            
+    def solve(self, visualizer=None):
+        """Tìm đường đi với hiển thị trực quan"""
+        import random
+        import time
+        import heapq
+        
+        self.visualizer = visualizer
+        
+        if not self._is_solvable(self.initial_state, self.target_state):
+            if self.visualizer:
+                self.visualizer.update_status("Bài toán không thể giải được!")
+            print("Bài toán không thể giải được!")
+            return None
+        
+        start_time = time.time()
+        
+        initial_belief = self._create_initial_belief()
+        self.belief_states_history = [initial_belief]
+        self.current_belief = initial_belief
+        
+        if self.visualizer:
+            self.visualizer.update_status(f"Khởi tạo với {len(initial_belief)} trạng thái khả dĩ")
+            self.visualizer.draw_belief_states(initial_belief, 0)
+            self.wait()
+        
+        queue = [(self._calculate_belief_heuristic(initial_belief), id(initial_belief), 
+                 initial_belief, [self.initial_state], {self.initial_state: None})]
+        
+        visited_beliefs = set([frozenset(initial_belief)])
+        
+        iterations = 0
+        
+        while queue and iterations < self.max_iterations:
+            iterations += 1
+            self.step_counter = iterations
+            
+            _, _, current_belief, path, parent = heapq.heappop(queue)
+            self.current_belief = current_belief
+            
+            if self.visualizer:
+                self.visualizer.update_status(f"Bước {iterations}: Xem xét belief state có {len(current_belief)} trạng thái")
+                self.visualizer.draw_belief_states(current_belief, iterations)
+                self.wait()
+            
+            if self._is_goal_belief(current_belief):
+                for state in current_belief:
+                    if state == self.target_state:
+                        parent[state] = path[-1]
+                        path.append(state)
+                        
+                        execution_time = time.time() - start_time
+                        result_message = f"Tìm thấy giải pháp sau {iterations} bước, {execution_time:.3f}s"
+                        
+                        if self.visualizer:
+                            self.visualizer.update_status(result_message)
+                            self.visualizer.draw_path(path)
+                            self.wait()
+                        
+                        print(result_message)
+                        print(f"Kích thước belief states: {[len(bs) for bs in self.belief_states_history]}")
+                        return path
+            
+            current_state = path[-1]
+            current_state_obj = PuzzleState(current_state)
+            
+            next_states = current_state_obj.get_next_states()
+            next_states_with_heuristic = []
+            
+            for next_state in next_states:
+                h = 0
+                for i in range(len(next_state)):
+                    if next_state[i] != '_' and next_state[i] != self.target_state[i]:
+                        target_idx = self.target_state.index(next_state[i])
+                        curr_row, curr_col = divmod(i, 3)
+                        target_row, target_col = divmod(target_idx, 3)
+                        h += abs(curr_row - target_row) + abs(curr_col - target_col)
+                next_states_with_heuristic.append((h, next_state))
+            
+            next_states_with_heuristic.sort()
+            
+            for h_val, next_state in next_states_with_heuristic:
+                action = "move" 
+                observation = self._get_partial_observation(next_state)
+                
+                if self.visualizer:
+                    self.visualizer.update_status(f"Bước {iterations}: Thực hiện hành động và quan sát")
+                    self.visualizer.highlight_state(next_state, observation)
+                    self.wait()
+                
+                new_belief = self._update_belief_state(current_belief, action, observation)
+                
+                if not new_belief:
+                    continue
+                
+                belief_key = frozenset(new_belief)
+                
+                if belief_key not in visited_beliefs:
+                    visited_beliefs.add(belief_key)
+                    
+                    new_parent = parent.copy()
+                    new_parent[next_state] = current_state
+                    new_path = path + [next_state]
+                    
+                    belief_h = self._calculate_belief_heuristic(new_belief)
+                    
+                    if self.visualizer:
+                        self.visualizer.update_status(f"Bước {iterations}: Cập nhật belief state ({len(new_belief)} trạng thái)")
+                        self.visualizer.draw_belief_states(new_belief, iterations, current_index=len(self.belief_states_history))
+                        self.wait()
+                    
+                    heapq.heappush(queue, (belief_h, id(new_belief), new_belief, new_path, new_parent))
+                    
+                    self.belief_states_history.append(new_belief)
+                    self.actions_history.append(action)
+                    self.observations_history.append(observation)
+        
+        no_solution_message = f"Không tìm thấy giải pháp sau {iterations} bước, {time.time() - start_time:.3f}s"
+        
+        if self.visualizer:
+            self.visualizer.update_status(no_solution_message)
+        
+        print(no_solution_message)
+        return None
+
+class PartiallyObservableVisualizer:
+    def __init__(self, root, algorithm, initial_state, target_state):
+        """Khởi tạo giao diện hiển thị cho thuật toán Partially Observable Search"""
+        self.root = root
+        self.algorithm = algorithm
+        self.initial_state = initial_state
+        self.target_state = target_state
+        
+        self.paused = False 
+        self.search_speed = 1.0  
+        
+        self.window = tk.Toplevel(root)
+        self.window.title("Partially Observable Search Visualization")
+        self.window.geometry("1200x800")
+        self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        self.main_frame = tk.Frame(self.window)
+        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        self.left_frame = tk.Frame(self.main_frame, width=300)
+        self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 10))
+        
+        info_frame = tk.LabelFrame(self.left_frame, text="Thông tin thuật toán")
+        info_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        tk.Label(info_frame, text=f"Thuật toán: Partially Observable Search").pack(anchor=tk.W, padx=5, pady=2)
+        tk.Label(info_frame, text=f"Trạng thái ban đầu: {initial_state}").pack(anchor=tk.W, padx=5, pady=2)
+        tk.Label(info_frame, text=f"Trạng thái đích: {target_state}").pack(anchor=tk.W, padx=5, pady=2)
+        
+        control_frame = tk.LabelFrame(self.left_frame, text="Điều khiển")
+        control_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.pause_button = tk.Button(control_frame, text="Pause", command=self.toggle_pause)
+        self.pause_button.pack(fill=tk.X, padx=5, pady=5)
+        
+        speed_frame = tk.Frame(control_frame)
+        speed_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        tk.Label(speed_frame, text="Tốc độ:").pack(side=tk.LEFT)
+        self.speed_scale = tk.Scale(speed_frame, from_=1, to=10, orient=tk.HORIZONTAL, 
+                                  command=self.update_speed)
+        self.speed_scale.set(1)
+        self.speed_scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        status_frame = tk.LabelFrame(self.left_frame, text="Trạng thái")
+        status_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.status_text = tk.Text(status_frame, height=5, wrap=tk.WORD, state=tk.DISABLED)
+        self.status_text.pack(fill=tk.BOTH, padx=5, pady=5)
+        
+        belief_info_frame = tk.LabelFrame(self.left_frame, text="Thông tin Belief State")
+        belief_info_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        
+        self.belief_info_text = tk.Text(belief_info_frame, wrap=tk.WORD, state=tk.DISABLED)
+        self.belief_info_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        self.right_frame = tk.Frame(self.main_frame)
+        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        current_state_frame = tk.LabelFrame(self.right_frame, text="Trạng thái hiện tại")
+        current_state_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.current_canvas = tk.Canvas(current_state_frame, width=200, height=200, bg="white")
+        self.current_canvas.pack(side=tk.LEFT, padx=10, pady=10)
+        
+        self.observation_frame = tk.LabelFrame(current_state_frame, text="Quan sát")
+        self.observation_frame.pack(side=tk.LEFT, padx=10, pady=10)
+        
+        self.observation_canvas = tk.Canvas(self.observation_frame, width=200, height=200, bg="white")
+        self.observation_canvas.pack(padx=10, pady=10)
+        
+        belief_frame = tk.LabelFrame(self.right_frame, text="Belief States")
+        belief_frame.pack(fill=tk.BOTH, expand=True)
+        
+        belief_scroll = tk.Scrollbar(belief_frame)
+        belief_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.belief_canvas = tk.Canvas(belief_frame, yscrollcommand=belief_scroll.set, bg="white")
+        self.belief_canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        belief_scroll.config(command=self.belief_canvas.yview)
+        
+        self.belief_inner_frame = tk.Frame(self.belief_canvas, bg="white")
+        self.belief_canvas.create_window((0, 0), window=self.belief_inner_frame, anchor=tk.NW)
+        
+        self.belief_inner_frame.bind("<Configure>", self._configure_belief_canvas)
+        
+        self.current_renderer = PuzzleRenderer(self.current_canvas)
+        self.observation_renderer = PuzzleRenderer(self.observation_canvas)
+        
+    def _configure_belief_canvas(self, event):
+        """Cấu hình canvas để scroll khi cần"""
+        self.belief_canvas.configure(scrollregion=self.belief_canvas.bbox("all"))
+    
+    def on_close(self):
+        """Xử lý khi đóng cửa sổ"""
+        self.paused = True
+        self.window.destroy()
+    
+    def toggle_pause(self):
+        """Bật/tắt trạng thái tạm dừng"""
+        self.paused = not self.paused
+        self.pause_button.config(text="Resume" if self.paused else "Pause")
+    
+    def update_speed(self, value):
+        """Cập nhật tốc độ hiển thị"""
+        self.search_speed = 1.0 / float(value)
+    
+    def update_status(self, message):
+        """Cập nhật thông tin trạng thái"""
+        self.status_text.config(state=tk.NORMAL)
+        self.status_text.delete(1.0, tk.END)
+        self.status_text.insert(tk.END, message)
+        self.status_text.config(state=tk.DISABLED)
+        self.window.update()
+    
+    def update_belief_info(self, belief_state):
+        """Cập nhật thông tin về belief state"""
+        self.belief_info_text.config(state=tk.NORMAL)
+        self.belief_info_text.delete(1.0, tk.END)
+        
+        text = f"Số trạng thái: {len(belief_state)}\n"
+        if len(belief_state) <= 5:
+            text += "Các trạng thái trong belief state:\n"
+            for state in list(belief_state)[:5]:
+                text += f"- {state}\n"
+        else:
+            text += f"Hiển thị 5/{len(belief_state)} trạng thái:\n"
+            for state in list(belief_state)[:5]:
+                text += f"- {state}\n"
+            
+        self.belief_info_text.insert(tk.END, text)
+        self.belief_info_text.config(state=tk.DISABLED)
+        self.window.update()
+    
+    def draw_state(self, state, canvas, size=50):
+        """Vẽ một trạng thái lên canvas"""
+        canvas.delete("all")
+        
+        for i in range(3):
+            for j in range(3):
+                idx = i * 3 + j
+                x0, y0 = j * size, i * size
+                x1, y1 = x0 + size, y0 + size
+                
+                canvas.create_rectangle(x0, y0, x1, y1, fill="white", outline="black")
+                
+                if idx < len(state) and state[idx] != '_':
+                    if state[idx] == '?':
+                        canvas.create_text(x0 + size//2, y0 + size//2, text="?", font=("Arial", 14, "bold"))
+                    else:
+                        canvas.create_text(x0 + size//2, y0 + size//2, text=state[idx], font=("Arial", 14))
+    
+    def highlight_state(self, state, observation):
+        """Hiển thị trạng thái và quan sát của nó"""
+        self.draw_state(state, self.current_canvas)
+        
+        self.draw_state(observation, self.observation_canvas)
+        
+        self.window.update()
+    
+    def draw_belief_states(self, belief_states, step, current_index=None):
+        """Vẽ tập belief states lên giao diện"""
+        for widget in self.belief_inner_frame.winfo_children():
+            widget.destroy()
+        
+        self.update_belief_info(belief_states)
+        
+        title_frame = tk.Frame(self.belief_inner_frame, bg="white")
+        title_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        tk.Label(title_frame, text=f"Belief States - Bước {step}", font=("Arial", 12, "bold"), 
+               bg="white").pack(side=tk.LEFT)
+        
+        tk.Label(title_frame, text=f"Số trạng thái: {len(belief_states)}", 
+               bg="white").pack(side=tk.RIGHT)
+        
+        states_to_show = list(belief_states)[:10]
+        
+        grid_frame = tk.Frame(self.belief_inner_frame, bg="white")
+        grid_frame.pack(fill=tk.X)
+        
+        num_cols = 5
+        
+        for i, state in enumerate(states_to_show):
+            state_frame = tk.Frame(grid_frame, bd=1, relief=tk.RAISED, padx=5, pady=5)
+            row, col = divmod(i, num_cols)
+            state_frame.grid(row=row, column=col, padx=5, pady=5)
+            
+            state_canvas = tk.Canvas(state_frame, width=100, height=100, bg="white")
+            state_canvas.pack(pady=(0, 5))
+            
+            self.draw_state(state, state_canvas, size=30)
+            
+            match_target = "Đích" if state == self.target_state else ""
+            tk.Label(state_frame, text=match_target, fg="green" if match_target else "black").pack()
+        
+        if len(belief_states) > 10:
+            more_label = tk.Label(self.belief_inner_frame, 
+                                text=f"... và {len(belief_states) - 10} trạng thái khác", 
+                                bg="white", fg="blue")
+            more_label.pack(pady=10)
+        
+        self.window.update()
+    
+    def draw_path(self, path):
+        """Vẽ đường đi từ trạng thái ban đầu đến đích"""
+        path_window = tk.Toplevel(self.root)
+        path_window.title("Đường đi giải pháp")
+        path_window.geometry("800x600")
+        
+        info_frame = tk.Frame(path_window)
+        info_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        tk.Label(info_frame, text=f"Độ dài đường đi: {len(path) - 1} bước", 
+               font=("Arial", 12, "bold")).pack(side=tk.LEFT)
+        
+        path_frame = tk.Frame(path_window)
+        path_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        path_canvas = tk.Canvas(path_frame)
+        path_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        path_scrollbar = tk.Scrollbar(path_frame, command=path_canvas.yview)
+        path_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        path_canvas.configure(yscrollcommand=path_scrollbar.set)
+        
+        inner_frame = tk.Frame(path_canvas)
+        path_canvas.create_window((0, 0), window=inner_frame, anchor=tk.NW)
+        
+        for i, state in enumerate(path):
+            step_frame = tk.Frame(inner_frame, bd=1, relief=tk.RAISED, padx=10, pady=10)
+            step_frame.pack(fill=tk.X, pady=5)
+            
+            title = f"Bước {i}: Bắt đầu" if i == 0 else f"Bước {i}: Di chuyển"
+            if i == len(path) - 1:
+                title += " (Đích)"
+            
+            tk.Label(step_frame, text=title, font=("Arial", 10, "bold")).pack(anchor=tk.W)
+            
+            state_canvas = tk.Canvas(step_frame, width=150, height=150, bg="white")
+            state_canvas.pack(pady=5)
+            
+            self.draw_state(state, state_canvas)
+        
+        inner_frame.update_idletasks()
+        path_canvas.config(scrollregion=path_canvas.bbox("all"))
+    
+    def wait(self):
+        """Tạm dừng thực thi và cập nhật UI"""
+        if self.paused:
+            while self.paused:
+                self.window.update()
+                time.sleep(0.1)
+        
+        time.sleep(self.search_speed)
+        self.window.update()
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -57,13 +57,14 @@ Dự án cung cấp một giao diện trực quan, cho phép người dùng theo
 
 ![Uninformed Search Demo](gift_picture/UninformedSearch.gif)
 
+![Uninformed Search Demo](gift_picture/CompareUninformedSearch.png)
+
+
 Thuật toán tìm kiếm mù là các thuật toán không sử dụng thông tin đặc biệt nào về mục tiêu để định hướng quá trình tìm kiếm, ngoài việc xác định trạng thái mục tiêu.
 
 ### Breadth-First Search (BFS)
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L64-L95)
-
-BFS khám phá không gian trạng thái theo chiều rộng, đảm bảo tìm được đường đi ngắn nhất (về số bước) từ trạng thái ban đầu đến trạng thái đích.
+[Link tới mã nguồn](Do_an_ca_nhan.py#L63-L95)BFS khám phá không gian trạng thái theo chiều rộng, đảm bảo tìm được đường đi ngắn nhất (về số bước) từ trạng thái ban đầu đến trạng thái đích.
 
 *Ưu điểm:* tìm được lời giải ngắn nhất (ít bước nhất) nếu chi phí các bước là như nhau.
 
@@ -73,9 +74,7 @@ BFS khám phá không gian trạng thái theo chiều rộng, đảm bảo tìm 
 
 ### Depth-First Search (DFS)
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L126-L163)
-
-DFS khám phá không gian trạng thái theo chiều sâu, tìm hiểu hết một nhánh trước khi quay lại và khám phá các nhánh khác.
+[Link tới mã nguồn](Do_an_ca_nhan.py#L126-L163)DFS khám phá không gian trạng thái theo chiều sâu, tìm hiểu hết một nhánh trước khi quay lại và khám phá các nhánh khác.
 
 **Độ phức tạp:**
 - Thời gian: O(b^m) với b là số nhánh trung bình và m là độ sâu tối đa 
@@ -83,9 +82,7 @@ DFS khám phá không gian trạng thái theo chiều sâu, tìm hiểu hết m�
 
 ### Iterative Deepening DFS
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L164-L209)
-
-IDDFS kết hợp ưu điểm của BFS và DFS bằng cách thực hiện DFS với giới hạn độ sâu tăng dần.
+[Link tới mã nguồn](Do_an_ca_nhan.py#L164-L209)IDDFS kết hợp ưu điểm của BFS và DFS bằng cách thực hiện DFS với giới hạn độ sâu tăng dần.
 Kết hợp lợi ích của tính năng tìm kiếm
 nhanh của tìm kiếm theo chiều rộng và
 tính hiệu quả bộ nhớ của tìm kiếm theo
@@ -96,9 +93,7 @@ chiều sâu
 
 ### Uniform Cost Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L96-L125)
-
-UCS mở rộng các nút theo thứ tự chi phí tích lũy từ nút gốc, đảm bảo tìm được đường đi có chi phí thấp nhất.
+[Link tới mã nguồn](Do_an_ca_nhan.py#L96-L125)UCS mở rộng các nút theo thứ tự chi phí tích lũy từ nút gốc, đảm bảo tìm được đường đi có chi phí thấp nhất.
 
 **Thuận lợi:**
 
@@ -126,12 +121,12 @@ phí thống nhất là O(b^(1 + [C*/ε]) )
 
 ![Heuristic Search Demo](gift_picture/InformedSearch.gif)
 
+![Heuristic Search Demo](gift_picture/CompareInformedSearch.png)
+
 Thuật toán tìm kiếm có thông tin sử dụng các hàm heuristic để định hướng quá trình tìm kiếm, giúp giảm không gian tìm kiếm và tăng hiệu suất.
 ### Greedy Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L232-L267)
-
-Greedy Search chỉ sử dụng hàm heuristic để đánh giá nút, luôn chọn nút có giá trị heuristic thấp nhất để mở rộng.
+[Link tới mã nguồn](Do_an_ca_nhan.py#L232-L267)Greedy Search chỉ sử dụng hàm heuristic để đánh giá nút, luôn chọn nút có giá trị heuristic thấp nhất để mở rộng.
 Không có tính đầy đủ do có khả năng tạo thành vòng lặp vô hạn ở một
 số nút.
 
@@ -179,9 +174,7 @@ thì thuật toán A* có độ phức tạp tính toán nhỏ nhất, tức là
 
 ### IDA* Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L310-L390)
-
-IDA* kết hợp A* với ý tưởng tăng giới hạn độ sâu của IDDFS, giúp giảm yêu cầu bộ nhớ đáng kể.
+[Link tới mã nguồn](Do_an_ca_nhan.py#L310-L390)IDA* kết hợp A* với ý tưởng tăng giới hạn độ sâu của IDDFS, giúp giảm yêu cầu bộ nhớ đáng kể.
 
 **Độ phức tạp:**
 - Thời gian: trường hợp xấu nhất O(b^d) với b: bậc phân nhánh (số trạng thái con/trạng thái), d: độ sâu lời giải tối ưu.
@@ -196,31 +189,33 @@ Nhóm thuật toán này tập trung vào việc tối ưu hóa trạng thái hi
 
 ### Simple Hill Climbing
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L511-L563)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L486-L538)
+
 - Là cách đơn giản nhất để triển khai thuật toán leo đồi
 - Chỉ kiểm tra từng trạng thái lận cận của nó và nếu nó tìm thấy
 trạng thái tốt hơn trạng thái hiện tại thì di chuyển
+
 ### Steepest Hill Climbing
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L564-L626)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L539-L600)
 
 Steepest Hill Climbing xem xét tất cả các trạng thái kế tiếp và chọn trạng thái tốt nhất để di chuyển.
 
 ### Beam Search Hill Climbing
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L627-L829)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L601-L802)
 
 Beam Search Hill Climbing duy trì một tập các trạng thái tốt nhất (beam width) thay vì chỉ một trạng thái duy nhất.
 
 ### Stochastic Hill Climbing 
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L830-L888)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L803-L861)
 
 Stochastic Hill Climbing chọn ngẫu nhiên giữa các trạng thái kế tiếp tốt hơn với xác suất tỷ lệ thuận với mức độ cải thiện.
 
 ### Simulated Annealing
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L889-L988)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L862-L960)
 
 Simulated Annealing cho phép chọn trạng thái kém hơn với xác suất giảm dần theo thời gian, giúp thoát khỏi cực đại địa phương.
 
@@ -233,7 +228,7 @@ Nơi:
 
 ### Genetic Algorithm
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L989-L1243)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L961-L1210)
 
 Thuật toán di truyền mô phỏng quá trình tiến hóa tự nhiên, sử dụng các nguyên tắc chọn lọc tự nhiên, lai ghép, và đột biến để tìm lời giải.
 
@@ -255,49 +250,63 @@ Nơi:
 
 ![CSP Demo](gift_picture/CSPs.gif)
 
+![CSP Demo](gift_picture/CompareCSPs.png)
+
 Các thuật toán dựa trên ràng buộc (CSP) tập trung vào việc tìm giải pháp thỏa mãn một tập các ràng buộc. Để xem xét rõ hơn quá trình quay lui thì bạn hãy chọn Visualize CSP có sẵn trên giao diện để xem chi tiết (quá trình cũng hiển thị trên console).
 
 ![CSP visualize ](gift_picture/VisualizeCSP.gif)
 
 ### Backtracking Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L1623-L1725)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L1842-L1940)
 
 Backtracking Search là thuật toán tìm kiếm đệ quy, gán giá trị cho biến và quay lui khi gặp xung đột.
 
 ### Forward Checking Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L1726-L1828)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L1941-L2041)
 
 Forward Checking mở rộng Backtracking bằng cách xem trước các hạn chế tiềm ẩn, loại bỏ các giá trị không khả thi từ miền của các biến chưa gán.
 
 ### Min-Conflicts Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L1829-L2002)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L2042-L2208)
 
 Min-Conflicts hoạt động bằng cách ngẫu nhiên gán giá trị ban đầu cho tất cả các biến, sau đó lặp đi lặp lại việc chọn một biến có xung đột và gán giá trị mới để giảm thiểu số xung đột.
+
+### Q-Learning
+
+[Link tới mã nguồn](Do_an_ca_nhan.py#L2209-L2461)
+
+Q-Learning là một thuật toán học tăng cường không cần mô hình, học hàm giá trị Q để tối ưu hóa việc ra quyết định trong môi trường không xác định.
 
 ## Nhóm Thuật Toán Tìm Kiếm Trong Môi Trường Phức Tạp (Complex Environment)
 
 ![Complex Environment Demo](gift_picture/ComplexEnvironments.gif)
 
+![Complex Environment Demo](gift_picture/CompareConplexEnvironments.png)
+
 Các thuật toán này giải quyết các vấn đề tìm kiếm trong môi trường không chắc chắn, không đầy đủ thông tin hoặc có tính ngẫu nhiên.
 
 ### Belief State Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L1244-L1344)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L1211-L1344)
+
+![Belief State Search Demo](gift_picture/BeliefStateSearch.gif)
 
 Belief State Search tìm kiếm trong không gian trạng thái niềm tin, phù hợp với các môi trường không chắc chắn.
 
 ### AND-OR Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L1345-L1422)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L1478-L1554)
 
 AND-OR Search giải quyết các vấn đề có các hoạt động không xác định, xây dựng một cây với các nút AND và OR.
 
 ### Partially Observable Search
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L1423-L1622)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L1555-L1841)
+
+![Partially Observable Search Demo](gift_picture/PartiallyObservableSearch.gif)
 
 Partially Observable Search giải quyết các vấn đề trong môi trường mà các agent không có thông tin đầy đủ về trạng thái của hệ thống.
 
@@ -309,7 +318,7 @@ Học tăng cường là một nhóm thuật toán trong đó agent học cách 
 
 ### Q-Learning
 
-[Link tới mã nguồn](Do_an_ca_nhan.py#L2003-L2265)
+[Link tới mã nguồn](Do_an_ca_nhan.py#L2209-L2461)
 
 Q-Learning là một thuật toán học tăng cường không cần mô hình, học hàm giá trị Q để tối ưu hóa việc ra quyết định trong môi trường không xác định.
 
